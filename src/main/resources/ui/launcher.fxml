@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="launcher.LauncherController"
+            styleClass="root-pane"
+            prefWidth="960" prefHeight="600">
+
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="10" styleClass="top-bar">
+            <padding>
+                <Insets top="14" right="20" bottom="14" left="20"/>
+            </padding>
+            <ImageView fitHeight="28" preserveRatio="true">
+                <image><Image url="@../assets/logo.png"/></image>
+            </ImageView>
+            <HBox HBox.hgrow="ALWAYS"/>
+            <Label fx:id="profileLabel" text="Chua dang nhap" styleClass="profile-label"/>
+            <ImageView fx:id="skinImageView" fitWidth="28" fitHeight="28" preserveRatio="false" smooth="false"/>
+            <Button fx:id="loginButton" text="Dang nhap" onAction="#onLoginClicked" styleClass="secondary-button"/>
+            <Button fx:id="settingsButton" text="Cai dat" onAction="#onSettingsClicked" styleClass="icon-button"/>
+        </HBox>
+    </top>
+
+    <center>
+        <VBox alignment="CENTER" spacing="16" styleClass="center-pane">
+            <Label text="Chao mung tro lai!" styleClass="welcome-label"/>
+            <Label text="San sang phieu luu trong the gioi Minecraft" styleClass="subtitle-label"/>
+        </VBox>
+    </center>
+
+    <bottom>
+        <VBox spacing="8" styleClass="bottom-bar">
+            <padding>
+                <Insets top="10" right="20" bottom="16" left="20"/>
+            </padding>
+            <ProgressBar fx:id="downloadProgressBar" prefWidth="Infinity" visible="false"/>
+            <HBox alignment="CENTER_LEFT" spacing="12">
+                <Label fx:id="statusLabel" text="San sang" styleClass="status-label"/>
+                <HBox HBox.hgrow="ALWAYS"/>
+                <CheckBox fx:id="fabricCheckBox" text="Fabric" styleClass="status-label"/>
+                <ComboBox fx:id="versionComboBox" prefWidth="160"/>
+                <Button fx:id="playButton" text="CHOI" onAction="#onPlayClicked" styleClass="play-button"/>
+            </HBox>
+        </VBox>
+    </bottom>
+
+</BorderPane>
