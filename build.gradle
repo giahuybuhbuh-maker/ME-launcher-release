@@ -5,36 +5,9 @@ plugins {
 
 group = 'com.melauncher'
 version = '1.0.0'
-
-repositories {
-    mavenCentral()
-}
-
-java {
-    toolchain {
-        // JDK 25 la LTS hien tai, di kem voi dong JavaFX 25.x on dinh
-        languageVersion = JavaLanguageVersion.of(25)
-    }
-}
-
-// Bat buoc UTF-8 de comment/chuoi tieng Viet trong code khong bi loi
+trong code khong bi loi
 // khi build tren may co encoding mac dinh khac (hay gap tren Windows).
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8'
-}
-
-javafx {
-    version = '25.0.1'
-    modules = ['javafx.controls', 'javafx.fxml']
-}
-
-dependencies {
-    // Dung de doc/ghi file cau hinh JSON (config/launcher.json)
-    implementation 'com.google.code.gson:gson:2.11.0'
-}
-
-application {
-    mainClass = 'launcher.Main'
+tasks.withType(J
 }
 
 tasks.named('run') {
