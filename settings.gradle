@@ -1,7 +1,0 @@
-plugins {
-    // Cho phep Gradle TU TAI JDK 25 ve neu may chua co (qua Foojay Disco API),
-    // thay vi bat loi "Cannot find a Java installation..." nhu ban gap.
-    id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
-}
-
-rootProject.name = 'me-launcher'
