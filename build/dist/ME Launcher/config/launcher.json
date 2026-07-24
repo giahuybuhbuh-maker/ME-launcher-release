@@ -1,0 +1,9 @@
+{
+  "selectedVersion": "1.21.1",
+  "javaPath": "",
+  "minMemoryMB": 1024,
+  "maxMemoryMB": 4096,
+  "windowWidth": 960,
+  "windowHeight": 600,
+  "darkTheme": true
+}
