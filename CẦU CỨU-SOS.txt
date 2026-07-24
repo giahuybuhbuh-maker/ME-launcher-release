@@ -1,0 +1,7 @@
+IF = NẾU 
+bạn không vào được ME launcher thì bạn hãy làm theo văn bản này 
+1. vào thư mục .\build\dist\ME Launcher trong thư mục bạn vừa tải 
+2. nếu bạn thấy .bat hoặc .vbs thì bạn nhấn 1 trong 2 :)
+3. enjoy :)
+có bugs-and-bugs thì vào discord nha:)
+discord : https://discord.gg/347kZE9v

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="launcher.SettingsController"
+      spacing="16" styleClass="root-pane"
+      prefWidth="420" prefHeight="420">
+    <padding>
+        <Insets top="24" right="24" bottom="24" left="24"/>
+    </padding>
+
+    <Label text="Cai dat" styleClass="welcome-label"/>
+
+    <VBox spacing="6">
+        <Label text="RAM toi thieu (MB)" styleClass="status-label"/>
+        <Spinner fx:id="minMemorySpinner" editable="true"/>
+    </VBox>
+
+    <VBox spacing="6">
+        <Label text="RAM toi da (MB)" styleClass="status-label"/>
+        <Spinner fx:id="maxMemorySpinner" editable="true"/>
+    </VBox>
+
+    <VBox spacing="6">
+        <Label text="Duong dan Java tuy chinh (de trong = tu dong tai)" styleClass="status-label"/>
+        <TextField fx:id="javaPathField" promptText="vd: C:\Program Files\Java\jdk-21\bin\javaw.exe"/>
+    </VBox>
+
+    <CheckBox fx:id="darkThemeCheckBox" text="Giao dien toi (dark theme)"/>
+
+    <Label fx:id="infoLabel" styleClass="status-label"/>
+
+    <Region VBox.vgrow="ALWAYS"/>
+
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Button text="Gioi thieu" onAction="#onAboutClicked" styleClass="secondary-button"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="Huy" onAction="#onCancelClicked" styleClass="secondary-button"/>
+        <Button text="Luu" onAction="#onSaveClicked" styleClass="play-button"/>
+    </HBox>
+</VBox>
