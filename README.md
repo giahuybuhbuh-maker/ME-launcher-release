@@ -9,7 +9,7 @@
   <!-- Badges -->
   <p>
     <a href="https://github.com/giahuybuhbuh-maker/ME-launcher-release/releases">
-      <img src="https://img.shields.io/badge/Phiên_bản-v0.1.4-brightgreen?style=for-the-badge" alt="Release Version">
+      <img src="https://img.shields.io/badge/Phiên_bản-v0.1.5-brightgreen?style=for-the-badge" alt="Release Version">
     </a>
     <a href="https://www.oracle.com/java/">
       <img src="https://img.shields.io/badge/Java-25-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white" alt="Java 25">
