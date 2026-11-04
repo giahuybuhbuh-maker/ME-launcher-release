@@ -55,7 +55,7 @@
 
 ## ⬇️ Tải xuống & Cài đặt
 
-Bạn có thể tải phiên bản mới nhất (**v0.1.4**) thông qua các liên kết dưới đây:
+Bạn có thể tải phiên bản mới nhất (**v0.1.6**) thông qua các liên kết dưới đây:
 
 * 📦 **[Tải qua GitHub Releases](https://github.com/giahuybuhbuh-maker/ME-launcher-release/releases)** *(Khuyên dùng)*
 * ☁️ **[Tải trực tiếp qua Google Drive (ME-Launcher-Setup / Portable)](https://drive.google.com/file/d/1v9YYQeDmW9jL19BF5QrThE8SVtCXTIR7/view?usp=sharing)**
