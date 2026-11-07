@@ -1,0 +1,69 @@
+.root-pane {
+    -fx-font-family: "Segoe UI", "Arial", sans-serif;
+}
+
+.logo-label {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+}
+
+.welcome-label {
+    -fx-font-size: 26px;
+    -fx-font-weight: bold;
+}
+
+.subtitle-label {
+    -fx-font-size: 14px;
+}
+
+.play-button {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-padding: 10 32 10 32;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+
+.icon-button {
+    -fx-font-size: 13px;
+    -fx-background-radius: 4;
+    -fx-padding: 6 14 6 14;
+    -fx-cursor: hand;
+}
+
+.secondary-button {
+    -fx-font-size: 13px;
+    -fx-background-radius: 4;
+    -fx-padding: 6 14 6 14;
+    -fx-cursor: hand;
+}
+
+.status-label {
+    -fx-font-size: 12px;
+}
+/* Làm rõ toàn bộ chữ nhãn, CheckBox và RadioButton trong Cài đặt */
+.label, .check-box, .radio-button {
+    -fx-text-fill: #FFFFFF !important;
+    -fx-font-weight: 600;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.95), 6, 0.75, 0, 1);
+}
+
+/* Chỉnh màu chữ bên trong ô nhập liệu (TextField & Spinner) rõ ràng, dễ nhìn */
+.text-field, .spinner .text-field {
+    -fx-background-color: rgba(255, 255, 255, 0.95);
+    -fx-text-fill: #111827;
+    -fx-prompt-text-fill: #6B7280;
+    -fx-font-weight: 600;
+    -fx-background-radius: 6px;
+}
+
+/* Làm nổi bật ô tích CheckBox và nút tròn RadioButton */
+.check-box .box, .radio-button .radio {
+    -fx-background-color: rgba(255, 255, 255, 0.92);
+    -fx-border-color: #3B82F6;
+    -fx-border-radius: 4px;
+}
+.radio-button .radio {
+    -fx-border-radius: 50%;
+    -fx-background-radius: 50%;
+}
