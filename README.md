@@ -20,6 +20,9 @@
     <a href="#-yêu-cầu-hệ-thống">
       <img src="https://img.shields.io/badge/HĐH-Windows_10%2B_(64--bit)-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows 10+">
     </a>
+    <a href="#-giấy-phép--bản-quyền-license--copyright">
+      <img src="https://img.shields.io/badge/Giấy_phép-MIT-yellow?style=for-the-badge" alt="License: MIT">
+    </a>
     <a href="https://discord.gg/m7dSYUacWp">
       <img src="https://img.shields.io/badge/Discord-Tham_gia_ngay-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord">
     </a>
@@ -30,6 +33,7 @@
     <a href="#-tính-năng-nổi-bật">✨ Tính năng</a> •
     <a href="#-tải-xuống--cài-đặt">⬇️ Tải xuống</a> •
     <a href="#-yêu-cầu-hệ-thống">💻 Yêu cầu hệ thống</a> •
+    <a href="#-giấy-phép--bản-quyền-license--copyright">📜 Bản quyền</a> •
     <a href="https://discord.gg/m7dSYUacWp">💬 Cộng đồng</a>
   </p>
 </div>
@@ -44,12 +48,12 @@
 
 ## ✨ Tính năng nổi bật
 
-* 🛡️ **An toàn & Bảo mật (Anti-Spyware & Trojan):** Xác thực đúng chuẩn (bao gồm XSTS), minh bạch, đặt sự an toàn của người chơi lên hàng đầu. 100% phát triển bởi người Việt.
-* 🧵 **Tích hợp sẵn Fabric Loader:** Chỉ cần đánh dấu vào một ô duy nhất, launcher sẽ tự động tìm kiếm bản Fabric Loader tương thích và ghép thẳng vào phiên bản Minecraft bạn chọn.
-* ☕ **Tự động quản lý Java Runtime:** Không cần đau đầu tự tìm và cài đặt JDK cho từng phiên bản game khác nhau — ME Launcher tự động tải đúng bản Java mà Minecraft yêu cầu.
-* 🚀 **Tinh chỉnh hiệu năng sẵn (Aikar's Flags):** Tích hợp sẵn bộ JVM flags tối ưu hóa bộ nhớ rác (Garbage Collection), giúp giảm thiểu tình trạng giật lag (stutter/lag spikes) khi挂 máy hoặc chơi trong thời gian dài.
-* ⚙️ **Kiểm soát cài đặt linh hoạt:** Dễ dàng tùy chỉnh dung lượng RAM tối thiểu/tối đa và đường dẫn Java tùy chọn ngay trong giao diện cài đặt.
-* 🔄 **Kiểm tra tệp tin thông minh:** Tự động quét và chỉ tải lại những tệp tin còn thiếu hoặc bị lỗi, tiết kiệm thời gian và băng thông mỗi lần khởi động game.
+- 🛡️ **An toàn & Bảo mật (Anti-Spyware & Trojan):** Xác thực đúng chuẩn (bao gồm XSTS), minh bạch, đặt sự an toàn của người chơi lên hàng đầu. 100% phát triển bởi người Việt.
+- 🧵 **Tích hợp sẵn Fabric Loader:** Chỉ cần đánh dấu vào một ô duy nhất, launcher sẽ tự động tìm kiếm bản Fabric Loader tương thích và ghép thẳng vào phiên bản Minecraft bạn chọn.
+- ☕ **Tự động quản lý Java Runtime:** Không cần đau đầu tự tìm và cài đặt JDK cho từng phiên bản game khác nhau — ME Launcher tự động tải đúng bản Java mà Minecraft yêu cầu.
+- 🚀 **Tinh chỉnh hiệu năng sẵn (Aikar's Flags):** Tích hợp sẵn bộ JVM flags tối ưu hóa bộ nhớ rác (Garbage Collection), giúp giảm thiểu tình trạng giật lag (stutter/lag spikes) khi挂 máy hoặc chơi trong thời gian dài.
+- ⚙️ **Kiểm soát cài đặt linh hoạt:** Dễ dàng tùy chỉnh dung lượng RAM tối thiểu/tối đa và đường dẫn Java tùy chọn ngay trong giao diện cài đặt.
+- 🔄 **Kiểm tra tệp tin thông minh:** Tự động quét và chỉ tải lại những tệp tin còn thiếu hoặc bị lỗi, tiết kiệm thời gian và băng thông mỗi lần khởi động game.
 
 ---
 
@@ -57,9 +61,9 @@
 
 Bạn có thể tải phiên bản mới nhất (**v0.1.6**) thông qua các liên kết dưới đây:
 
-* 📦 **[Tải qua GitHub Releases](https://github.com/giahuybuhbuh-maker/ME-launcher-release/releases)** *(Khuyên dùng)*
-* ☁️ **[Tải trực tiếp qua Google Drive (ME-Launcher-Setup / Portable)](https://drive.google.com/file/d/1v9YYQeDmW9jL19BF5QrThE8SVtCXTIR7/view?usp=sharing)**
-* 🌐 **[Truy cập Trang chủ chính thức](https://giahuybuhbuh-maker.github.io/melauncher.app-website/)**
+- 📦 **[Tải qua GitHub Releases](https://github.com/giahuybuhbuh-maker/ME-launcher-release/releases)** *(Khuyên dùng)*
+- ☁️ **[Tải trực tiếp qua Google Drive (ME-Launcher-Setup / Portable)](https://drive.google.com/file/d/1v9YYQeDmW9jL19BF5QrThE8SVtCXTIR7/view?usp=sharing)**
+- 🌐 **[Truy cập Trang chủ chính thức](https://giahuybuhbuh-maker.github.io/melauncher.app-website/)**
 
 ### Hướng dẫn sử dụng bản Portable (`.zip`):
 Bản nén `.zip` đã được đóng gói kèm sẵn môi trường Java Runtime bên trong, bạn không cần cài đặt thêm Java bên ngoài:
@@ -84,17 +88,27 @@ Bản nén `.zip` đã được đóng gói kèm sẵn môi trường Java Runti
 
 ## 🛠️ Công nghệ sử dụng
 
-* **Ngôn ngữ & Nền tảng:** Java 25
-* **Giao diện đồ họa (GUI):** JavaFX 25
-* **Đóng gói phát hành:** NSIS / Portable Archive
+- **Ngôn ngữ & Nền tảng:** Java 25
+- **Giao diện đồ họa (GUI):** JavaFX 25
+- **Đóng gói phát hành:** NSIS / Portable Archive
 
 ---
 
 ## 💬 Cộng đồng & Hỗ trợ
 
 Nếu bạn gặp lỗi trong quá trình sử dụng, muốn đóng góp ý kiến hoặc giao lưu cùng những người chơi khác:
-* Tham gia máy chủ **[Discord của ME Launcher](https://discord.gg/m7dSYUacWp)**.
-* Báo lỗi trực tiếp tại mục **[Issues](https://github.com/giahuybuhbuh-maker/ME-launcher-release/issues)** trên kho lưu trữ này.
+- Tham gia máy chủ **[Discord của ME Launcher](https://discord.gg/m7dSYUacWp)**.
+- Báo lỗi trực tiếp tại mục **[Issues](https://github.com/giahuybuhbuh-maker/ME-launcher-release/issues)** trên kho lưu trữ này.
+
+---
+
+## 📜 Giấy phép & Bản quyền (License & Copyright)
+
+**Bản quyền © 2026 thuộc về TonygamingTL (giahuybuhbuh-maker) / Dự án ME Launcher. Mọi quyền được bảo lưu.**
+
+Dự án được phân phối theo điều khoản của **[Giấy phép MIT (MIT License)](LICENSE)**:
+- **Quyền sử dụng:** Người dùng được phép tải xuống, cài đặt và sử dụng miễn phí cho mục đích cá nhân.
+- **Điều kiện phân phối lại:** Mọi bản sao, chỉnh sửa hoặc phân phối lại phải giữ nguyên thông báo bản quyền của tác giả gốc (**TonygamingTL / ME-Launcher**) và giấy phép đi kèm. Không được phép sử dụng tên thương hiệu hoặc logo của **ME Launcher** để mạo danh hoặc phát tán phần mềm độc hại.
 
 ---
 
