@@ -8,6 +8,8 @@ version = '1.0.0'
 
 repositories {
     mavenCentral()
+    // Thêm JitPack để tải WaifUPnP nếu bản trên Maven Central bị thiếu
+    maven { url 'https://jitpack.io' }
 }
 
 java {
@@ -25,12 +27,18 @@ tasks.withType(JavaCompile).configureEach {
 
 javafx {
     version = '25.0.1'
-    modules = ['javafx.controls', 'javafx.fxml']
+    modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.graphics' ]
 }
 
 dependencies {
     // Dung de doc/ghi file cau hinh JSON (config/launcher.json)
     implementation 'com.google.code.gson:gson:2.11.0'
+    // 1. OSHI: Đọc % CPU và dung lượng RAM phần cứng thời gian thực
+    implementation 'com.github.oshi:oshi-core:6.6.5'
+    implementation 'org.slf4j:slf4j-nop:2.0.16' // Tắt cảnh báo log thừa của OSHI
+
+    // 2. WaifUPnP: Tự động mở Port Forwarding (25565) trên Router
+    implementation 'com.github.adrien-p:WaifUPnP:1.0'
 }
 
 application {
