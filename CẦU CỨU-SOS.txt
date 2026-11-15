@@ -9,5 +9,6 @@ bạn không cài được cilent mods thì bạn hãy làm theo mình:
 2. gõ ~cd [ tệp lưu cilent ]~  | Vd : cd /d "%USERPROFILE%\Downloads"
 3. gõ tiếp dir *.jar ( liệt kê các .jar ) 
 4. gõ tiếp trong CMD : java -jar "ten-file-installer.jar" | VD :  java -jar "forge-1.20.1-installer.jar"
+enjoy now =>
 có bugs-and-bugs thì vào discord nha:)
 discord : https://discord.gg/347kZE9v
