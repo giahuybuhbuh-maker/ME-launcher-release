@@ -8,8 +8,6 @@ version = '1.0.0'
 
 repositories {
     mavenCentral()
-    // Thêm JitPack để tải WaifUPnP nếu bản trên Maven Central bị thiếu
-    maven { url 'https://jitpack.io' }
 }
 
 java {
@@ -33,12 +31,13 @@ javafx {
 dependencies {
     // Dung de doc/ghi file cau hinh JSON (config/launcher.json)
     implementation 'com.google.code.gson:gson:2.11.0'
+
     // 1. OSHI: Đọc % CPU và dung lượng RAM phần cứng thời gian thực
     implementation 'com.github.oshi:oshi-core:6.6.5'
     implementation 'org.slf4j:slf4j-nop:2.0.16' // Tắt cảnh báo log thừa của OSHI
 
-    // 2. WaifUPnP: Tự động mở Port Forwarding (25565) trên Router
-    implementation 'com.github.adrien-p:WaifUPnP:1.0'
+    // 2. WaifUPnP: Dành cho Tab Server ở bản v0.1.8 (bản v0.1.7 chưa dùng nên tạm ẩn để tránh lỗi tải & nhẹ file)
+    // implementation 'com.simtechdata:WaifUPnP:1.2.1'
 }
 
 application {
@@ -49,6 +48,10 @@ tasks.named('run') {
     // Chay voi working directory la goc du an, de logs/, config/, game/...
     // duoc tao dung cho theo cau truc du an, khong bi lech sang thu muc khac.
     workingDir = rootDir
+    jvmArgs = [
+            '-Dfile.encoding=UTF-8',
+            '--enable-native-access=ALL-UNNAMED'
+    ]
 }
 
 // Dong goi thanh app-image: 1 thu muc portable chua san .exe + JRE rieng
@@ -61,7 +64,10 @@ tasks.register('jpackageImage', Exec) {
 
     def installDir = layout.buildDirectory.dir("install/${project.name}/lib").get().asFile
     def destDir = layout.buildDirectory.dir("dist").get().asFile
-    def iconFile = file('src/main/resources/assets/icon.ico')
+    def iconFile = file('src/main/resources/assets/ME_Launcher.ico')
+    if (!iconFile.exists()) {
+        iconFile = file('src/main/resources/assets/icon.ico')
+    }
     // Lay duong dan luc CAU HINH (an toan) de dung lai luc CHAY ben duoi,
     // tranh goi truc tiep cac ham cua Project (project.delete/copy) luc
     // thuc thi - kieu goi nay dang bi Gradle canh bao se cam hoan toan.
@@ -79,9 +85,20 @@ tasks.register('jpackageImage', Exec) {
             '--name', 'ME Launcher',
             '--main-jar', "${project.name}-${project.version}.jar",
             '--main-class', 'launcher.Main',
-            '--app-version', project.version.toString()
+            '--app-version', project.version.toString(),
+            '--java-options', '-Xms32m',
+            '--java-options', '-Xmx160m',
+            '--java-options', '-XX:+UseSerialGC',
+            '--java-options', '-XX:MinHeapFreeRatio=10',
+            '--java-options', '-XX:MaxHeapFreeRatio=20',
+            '--java-options', '-XX:TieredStopAtLevel=1',
+            '--java-options', '-XX:MaxMetaspaceSize=96m',
+            '--java-options', '-XX:ReservedCodeCacheSize=32m',
+            '--java-options', '-Dfile.encoding=UTF-8',
+            '--java-options', '--enable-native-access=ALL-UNNAMED',
+            '--jlink-options', '--strip-native-commands --strip-debug --no-man-pages --no-header-files --compress=zip-9'
     ]
-    // Neu ban da bo icon.ico that vao src/main/resources/assets/, tu dong dung luon
+    // Tu dong dung ME_Launcher.ico (hoac icon.ico) trong src/main/resources/assets/
     if (iconFile.exists()) {
         cmd += ['--icon', iconFile.absolutePath]
     }
@@ -95,8 +112,10 @@ tasks.register('jpackageImage', Exec) {
         def destFolder = new File(destDir, 'ME Launcher')
         ['Tao-shortcut-Desktop.vbs', 'Tao-shortcut-Desktop.bat'].each { fileName ->
             def source = new File(packagingDir, fileName)
-            def target = new File(destFolder, fileName)
-            target.bytes = source.bytes
+            if (source.exists()) {
+                def target = new File(destFolder, fileName)
+                target.bytes = source.bytes
+            }
         }
     }
 }
