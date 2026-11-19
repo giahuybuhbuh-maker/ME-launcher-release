@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      alignment="CENTER" spacing="10"
+      styleClass="root-pane"
+      prefWidth="360" prefHeight="260">
+    <padding>
+        <Insets top="24" right="24" bottom="24" left="24"/>
+    </padding>
+    <Label text="ME LAUNCHER" styleClass="logo-label"/>
+    <Label text="Phien ban 1.0.0" styleClass="status-label"/>
+    <Label text="Launcher Minecraft tu viet bang Java + JavaFX" styleClass="subtitle-label" wrapText="true"/>
+    <Label text="Dang nhap qua tai khoan Microsoft that (OAuth device code flow)"
+           styleClass="status-label" wrapText="true"/>
+</VBox>
