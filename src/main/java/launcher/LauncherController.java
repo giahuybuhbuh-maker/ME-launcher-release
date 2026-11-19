@@ -6,7 +6,10 @@ import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -17,12 +20,17 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -44,6 +52,7 @@ import java.util.Optional;
 public class LauncherController {
 
     private static final Path OFFLINE_ACCOUNT_FILE = Path.of("offline_account.json").toAbsolutePath().normalize();
+    private static final String MRPACK_CONVERTER_URL = "https://fabulously-optimized.github.io/mrpack-to-zip/";
 
     private final VersionManager versionManager = new VersionManager();
     private final DownloadManager downloadManager = new DownloadManager();
@@ -538,50 +547,196 @@ public class LauncherController {
         }
     }
 
+    /**
+     * [NÂNG CẤP] Hộp thoại Cài đặt Mod rõ ràng, có Logo riêng từng Mod Loader
+     * và nút Convert mrpack sang zip (https://fabulously-optimized.github.io/mrpack-to-zip/).
+     */
     @FXML
     private void onModLoaderHelpClicked() {
         String gamePath = FileManager.gameDir().toAbsolutePath().normalize().toString();
 
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Cai OptiFine / Forge / NeoForge / Quilt");
-        alert.setHeaderText("Cac mod loader nay can cai THU CONG 1 lan, launcher chua tu dong hoa duoc:");
-        alert.setContentText(
-                "1. Bam nut ben duoi de mo dung trang tai (hoac copy duong dan roi tu mo trinh duyet)\n" +
-                "2. Tai file installer (.jar) chinh chu cua ho ve may\n" +
-                "3. Bam nut \"Chay file installer da tai\" ben duoi, chon dung file .jar vua tai -\n" +
-                "   launcher se tu chay giup, khong can tu go lenh java -jar\n" +
-                "4. Khi no hoi chon thu muc \".minecraft\", dan dung duong dan nay:\n\n" +
-                gamePath + "\n\n" +
-                "5. Cai xong, mo lai ME Launcher (hoac bam nut 🔄 canh o chon phien ban) -\n" +
-                "   phien ban moi se tu hien ra de chon."
+        Stage dialog = new Stage();
+        dialog.setTitle("Cài đặt Mod Loader & Chuyển đổi Modpack");
+        dialog.initOwner(playButton.getScene().getWindow());
+        dialog.initModality(Modality.WINDOW_MODAL);
+        dialog.setResizable(false);
+        LauncherApplication.loadWindowIcons(dialog);
+
+        VBox root = new VBox(14);
+        root.setPadding(new Insets(20));
+        root.setPrefWidth(640);
+        root.setStyle("-fx-background-color: #1b1f24; -fx-border-color: #33383f; -fx-border-width: 1px; "
+                + "-fx-background-radius: 0px; -fx-border-radius: 0px;");
+
+        Label titleLabel = new Label("CÀI ĐẶT MOD LOADER & CONVERT MRPACK");
+        titleLabel.setStyle("-fx-font-size: 17px; -fx-font-weight: bold; -fx-text-fill: #7ed957;");
+
+        Label introLabel = new Label(
+                "OptiFine, Forge, NeoForge và Quilt cần cài thủ công 1 lần; với gói Modrinth (.mrpack) " +
+                "bạn có thể chuyển sang .zip để chép mod nhanh hơn:"
         );
-        alert.getDialogPane().setPrefWidth(500);
+        introLabel.setWrapText(true);
+        introLabel.setStyle("-fx-font-size: 12.5px; -fx-text-fill: #d1d5db;");
 
-        ButtonType btnOptifine = new ButtonType("Mo OptiFine.net");
-        ButtonType btnForge = new ButtonType("Mo Forge");
-        ButtonType btnNeoForge = new ButtonType("Mo NeoForge");
-        ButtonType btnQuilt = new ButtonType("Mo Quilt");
-        ButtonType btnCopyPath = new ButtonType("Copy duong dan thu muc");
-        ButtonType btnRunInstaller = new ButtonType("Chay file installer da tai");
-        ButtonType btnClose = new ButtonType("Dong", ButtonBar.ButtonData.CANCEL_CLOSE);
-        alert.getButtonTypes().setAll(btnOptifine, btnForge, btnNeoForge, btnQuilt, btnCopyPath, btnRunInstaller, btnClose);
+        // 1. Hàng nút có Logo riêng từng Mod Loader
+        Label step1Label = new Label("1. Chọn Mod Loader để tải bộ cài (.jar) hoặc bấm Convert mrpack:");
+        step1Label.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #ffffff;");
 
-        Utils.applySquareTheme(alert);
-        Optional<ButtonType> result = alert.showAndWait();
-        result.ifPresent(button -> {
-            if (button == btnOptifine) openBrowserSafely("https://optifine.net/downloads");
-            else if (button == btnForge) openBrowserSafely("https://files.minecraftforge.net/");
-            else if (button == btnNeoForge) openBrowserSafely("https://neoforged.net/");
-            else if (button == btnQuilt) openBrowserSafely("https://quiltmc.org/en/install/");
-            else if (button == btnCopyPath) {
-                ClipboardContent content = new ClipboardContent();
-                content.putString(gamePath);
-                Clipboard.getSystemClipboard().setContent(content);
-                LauncherLogger.info("Da copy duong dan thu muc game/ vao clipboard.");
-            } else if (button == btnRunInstaller) {
-                runModLoaderInstallerJar();
+        HBox modButtonsRow = new HBox(10);
+        modButtonsRow.getChildren().addAll(
+                createModLogoButton("OptiFine", "OF", "#e53935", "/assets/optifine.png",
+                        "https://optifine.net/downloads"),
+                createModLogoButton("Forge", "FG", "#d97706", "/assets/forge.png",
+                        "https://files.minecraftforge.net/"),
+                createModLogoButton("NeoForge", "NF", "#ea580c", "/assets/neoforge.png",
+                        "https://neoforged.net/"),
+                createModLogoButton("Quilt", "QL", "#7c3aed", "/assets/quilt.png",
+                        "https://quiltmc.org/en/install/")
+        );
+
+        Button btnConvertMrpack = createModLogoButton(
+                "Convert mrpack", "MR", "#10b981", "/assets/mrpack.png",
+                MRPACK_CONVERTER_URL
+        );
+        btnConvertMrpack.setMaxWidth(Double.MAX_VALUE);
+
+        // 2. Đường dẫn thư mục game để dán khi cài Mod Loader
+        Label step2Label = new Label("2. Sao chép đường dẫn thư mục game (dán bằng Ctrl + V khi trình cài đặt hỏi thư mục):");
+        step2Label.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #ffffff;");
+
+        TextField pathField = new TextField(gamePath);
+        pathField.setEditable(false);
+        pathField.setStyle("-fx-background-color: #111418; -fx-text-fill: #e6e6e6; -fx-border-color: #3f454d; "
+                + "-fx-background-radius: 0px; -fx-border-radius: 0px; -fx-padding: 7 10 7 10;");
+        HBox.setHgrow(pathField, Priority.ALWAYS);
+
+        Button btnCopyPath = new Button("Copy đường dẫn");
+        btnCopyPath.setStyle("-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; "
+                + "-fx-background-radius: 0px; -fx-border-radius: 0px; -fx-padding: 7 14 7 14; -fx-cursor: hand;");
+        btnCopyPath.setOnAction(e -> {
+            ClipboardContent content = new ClipboardContent();
+            content.putString(gamePath);
+            Clipboard.getSystemClipboard().setContent(content);
+            btnCopyPath.setText("Đã Copy!");
+            btnCopyPath.setStyle("-fx-background-color: #16a34a; -fx-text-fill: white; -fx-font-weight: bold; "
+                    + "-fx-background-radius: 0px; -fx-border-radius: 0px; -fx-padding: 7 14 7 14; -fx-cursor: hand;");
+            LauncherLogger.info("Da copy duong dan thu muc game/ vao clipboard.");
+        });
+
+        HBox pathRow = new HBox(8, pathField, btnCopyPath);
+        pathRow.setAlignment(Pos.CENTER_LEFT);
+
+        // 3. Chạy bộ cài (.jar) hoặc mở thư mục mods
+        Label step3Label = new Label("3. Chạy file installer (.jar) vừa tải hoặc mở thư mục mods:");
+        step3Label.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #ffffff;");
+
+        Label step3Hint = new Label(
+                "Sau khi cài Mod Loader xong, bấm nút làm mới (🔄) cạnh ô chọn phiên bản để phiên bản mới hiện ra."
+        );
+        step3Hint.setWrapText(true);
+        step3Hint.setStyle("-fx-font-size: 12px; -fx-text-fill: #b0b6bd;");
+
+        Button btnRunInstaller = new Button("Chạy file installer da tai");
+        btnRunInstaller.setStyle("-fx-background-color: #4caf50; -fx-text-fill: white; -fx-font-weight: bold; "
+                + "-fx-background-radius: 0px; -fx-border-radius: 0px; -fx-padding: 8 16 8 16; -fx-cursor: hand;");
+        btnRunInstaller.setOnAction(e -> {
+            dialog.close();
+            runModLoaderInstallerJar();
+        });
+
+        Button btnOpenMods = new Button("Mở thư mục mods");
+        btnOpenMods.setStyle("-fx-background-color: #33383f; -fx-text-fill: #e6e6e6; -fx-font-weight: bold; "
+                + "-fx-background-radius: 0px; -fx-border-radius: 0px; -fx-padding: 8 14 8 14; -fx-cursor: hand;");
+        btnOpenMods.setOnAction(e -> {
+            try {
+                Path modsDir = FileManager.gameDir().resolve("mods").toAbsolutePath().normalize();
+                Files.createDirectories(modsDir);
+                if (java.awt.Desktop.isDesktopSupported()) {
+                    java.awt.Desktop.getDesktop().open(modsDir.toFile());
+                }
+            } catch (Exception ex) {
+                LauncherLogger.warn("Khong mo duoc thu muc mods: " + ex.getMessage());
             }
         });
+
+        Button btnClose = new Button("Dong");
+        btnClose.setStyle("-fx-background-color: #3f454d; -fx-text-fill: #e6e6e6; -fx-font-weight: bold; "
+                + "-fx-background-radius: 0px; -fx-border-radius: 0px; -fx-padding: 8 18 8 18; -fx-cursor: hand;");
+        btnClose.setOnAction(e -> dialog.close());
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        HBox actionRow = new HBox(10, btnRunInstaller, btnOpenMods, spacer, btnClose);
+        actionRow.setAlignment(Pos.CENTER_LEFT);
+
+        root.getChildren().addAll(
+                titleLabel,
+                introLabel,
+                step1Label,
+                modButtonsRow,
+                btnConvertMrpack,
+                step2Label,
+                pathRow,
+                step3Label,
+                step3Hint,
+                actionRow
+        );
+
+        Scene scene = new Scene(root);
+        Utils.applySquareTheme(scene);
+        dialog.setScene(scene);
+        dialog.showAndWait();
+    }
+
+    /**
+     * Tạo nút bấm góc vuông 90 độ kèm Logo riêng của từng Mod Loader / công cụ bên cạnh chữ.
+     */
+    private Button createModLogoButton(String labelText, String shortCode, String accentHex,
+                                       String resourceImagePath, String url) {
+        Node logoGraphic = buildModLogoGraphic(shortCode, accentHex, resourceImagePath);
+        Button btn = new Button(labelText, logoGraphic);
+        btn.setGraphicTextGap(8);
+        btn.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(btn, Priority.ALWAYS);
+
+        String baseStyle = "-fx-background-color: #262b33; -fx-text-fill: #ffffff; -fx-font-weight: bold; "
+                + "-fx-font-size: 13px; -fx-border-color: " + accentHex + "; -fx-border-width: 0 0 0 3px; "
+                + "-fx-background-radius: 0px; -fx-border-radius: 0px; -fx-padding: 8 12 8 12; "
+                + "-fx-cursor: hand; -fx-alignment: CENTER_LEFT;";
+        String hoverStyle = "-fx-background-color: #33383f; -fx-text-fill: #ffffff; -fx-font-weight: bold; "
+                + "-fx-font-size: 13px; -fx-border-color: " + accentHex + "; -fx-border-width: 0 0 0 3px; "
+                + "-fx-background-radius: 0px; -fx-border-radius: 0px; -fx-padding: 8 12 8 12; "
+                + "-fx-cursor: hand; -fx-alignment: CENTER_LEFT;";
+
+        btn.setStyle(baseStyle);
+        btn.setOnMouseEntered(e -> btn.setStyle(hoverStyle));
+        btn.setOnMouseExited(e -> btn.setStyle(baseStyle));
+        btn.setOnAction(e -> openBrowserSafely(url));
+        return btn;
+    }
+
+    private Node buildModLogoGraphic(String shortCode, String accentHex, String resourceImagePath) {
+        try (var is = getClass().getResourceAsStream(resourceImagePath)) {
+            if (is != null) {
+                Image img = new Image(is, 20, 20, true, true);
+                if (!img.isError() && img.getWidth() > 0) {
+                    ImageView iv = new ImageView(img);
+                    iv.setFitWidth(20);
+                    iv.setFitHeight(20);
+                    return iv;
+                }
+            }
+        } catch (Exception ignored) {}
+
+        Label badge = new Label(shortCode);
+        badge.setMinSize(22, 22);
+        badge.setMaxSize(22, 22);
+        badge.setAlignment(Pos.CENTER);
+        badge.setStyle("-fx-background-color: " + accentHex + "; -fx-text-fill: #ffffff; "
+                + "-fx-font-size: 10px; -fx-font-weight: bold; "
+                + "-fx-background-radius: 0px; -fx-border-radius: 0px;");
+        return badge;
     }
 
     /**
