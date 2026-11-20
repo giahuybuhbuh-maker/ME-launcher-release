@@ -1,7 +1,9 @@
 ﻿; ============================================================
 ;  ME Launcher - Setup (Phong cach Legacy Launcher)
-;  Co trang License + Tao Ldoc_i5n + Dong bo day du JDK 25 runtime\bin
+;  Co trang License + Tao Ldoc_i5n + Toi uu Runtime & RAM (<180MB)
 ; ============================================================
+
+SetCompressor /SOLID lzma
 
 !include "MUI2.nsh"
 !include "LogicLib.nsh"
@@ -25,9 +27,10 @@ VIAddVersionKey "FileVersion" "0.1.7.0"
 VIAddVersionKey "LegalCopyright" "Copyright (c) 2026"
 
 !ifndef DOWNLOAD_URL
-  !define DOWNLOAD_URL "https://github.com/giahuybuhbuh-maker/ME-launcher-release/releases/download/v0.1.7-beta02/ME-Launcher-v0.1.7-beta02.zip"
+  !define DOWNLOAD_URL "https://github.com/giahuybuhbuh-maker/ME-launcher-release/releases/download/v0.1.7-beta03/ME-Launcher-v0.1.7-beta03.zip"
 !endif
-!define ADOPTIUM_JDK25_URL "https://api.adoptium.net/v3/binary/latest/25/ga/windows/x64/jdk/hotspot/normal/eclipse"
+; Doi sang JRE 25 thay vi JDK 25 full de giam >150MB dung luong
+!define ADOPTIUM_JRE25_URL "https://api.adoptium.net/v3/binary/latest/25/ga/windows/x64/jre/hotspot/normal/eclipse"
 
 !define MUI_ABORTWARNING
 !define MUI_ICON "..\src\main\resources\assets\ME_Launcher.ico"
@@ -35,7 +38,7 @@ VIAddVersionKey "LegalCopyright" "Copyright (c) 2026"
 
 ; Trang Chao mung & Trang Hoan tat
 !define MUI_WELCOMEPAGE_TITLE "Chào mừng bạn đến với trình cài đặt ME Launcher"
-!define MUI_WELCOMEPAGE_TEXT "Trình cài đặt sẽ thiết lập ME Launcher cùng cấu trúc Ldoc_i5n và bộ Runtime Java 25 đầy đủ lên máy tính của bạn, đồng thời tự động tối ưu hóa Windows Graphics High Performance cho Minecraft.$\r$\n$\r$\nNhấn 'Tiến' để bắt đầu."
+!define MUI_WELCOMEPAGE_TEXT "Trình cài đặt sẽ thiết lập ME Launcher cùng cấu trúc Ldoc_i5n và bộ Runtime Java 25 siêu nhẹ lên máy tính của bạn, đồng thời tự động tối ưu hóa Windows Graphics High Performance cho Minecraft.$\r$\n$\r$\nNhấn 'Tiến' để bắt đầu."
 
 !define MUI_FINISHPAGE_RUN "$INSTDIR\ME Launcher.exe"
 !define MUI_FINISHPAGE_RUN_TEXT "Khởi động ME Launcher ngay bây giờ"
@@ -54,7 +57,7 @@ VIAddVersionKey "LegalCopyright" "Copyright (c) 2026"
 !insertmacro MUI_LANGUAGE "Vietnamese"
 
 Section "Cai dat ME Launcher" SecInstall
-    AddSize 220000
+    AddSize 110000
 
     SetOutPath "$INSTDIR"
     SetDetailsPrint both
@@ -84,8 +87,8 @@ Section "Cai dat ME Launcher" SecInstall
         Delete "$TEMP\me-launcher-download.zip"
     ${EndIf}
 
-    ; 3. Dong bo Ldoc_i5n, chep day du JDK 25 vao runtime\bin va cau hinh ME Launcher.cfg
-    DetailPrint "Đang đồng bộ đầy đủ runtime\bin (Java 25) và cấu hình ME Launcher.exe..."
+    ; 3. Dong bo Ldoc_i5n, toi uu Runtime Java 25 bang jlink/JRE va cau hinh ME Launcher.cfg (toi uu RAM)
+    DetailPrint "Đang tối ưu hóa Runtime Java 25 (<180MB), giảm RAM và cấu hình ME Launcher.exe..."
     FileOpen $4 "$TEMP\me-ldoc-setup.ps1" w
     FileWrite $4 'param([string]$$InstDir)$\r$\n'
     FileWrite $4 '$$ErrorActionPreference = "SilentlyContinue"$\r$\n'
@@ -115,7 +118,8 @@ Section "Cai dat ME Launcher" SecInstall
     FileWrite $4 'if ((Test-Path $$appDir) -and (Test-Path $$classesMain)) {$\r$\n'
     FileWrite $4 '    Add-Type -AssemblyName System.IO.Compression$\r$\n'
     FileWrite $4 '    Add-Type -AssemblyName System.IO.Compression.FileSystem$\r$\n'
-    FileWrite $4 '    $$mainJar = Get-ChildItem -Path $$appDir -Filter "*.jar" | Where-Object { $$_.Name -notmatch "^(javafx-|gson-|error_prone)" } | Select-Object -First 1$\r$\n'
+    FileWrite $4 '    $$mainJar = Get-ChildItem -Path $$appDir -Filter "*.jar" | Where-Object { $$_.Name -match "^me-launcher" } | Select-Object -First 1$\r$\n'
+    FileWrite $4 '    if (!$$mainJar) { $$mainJar = Get-ChildItem -Path $$appDir -Filter "*.jar" | Where-Object { $$_.Name -notmatch "^(javafx-|gson-|error_prone|jna|oshi-|slf4j-)" } | Select-Object -First 1 }$\r$\n'
     FileWrite $4 '    if ($$mainJar) {$\r$\n'
     FileWrite $4 '        $$zip = [System.IO.Compression.ZipFile]::Open($$mainJar.FullName, [System.IO.Compression.ZipArchiveMode]::Update)$\r$\n'
     FileWrite $4 '        foreach ($$root in @($$classesMain, $$resMain)) {$\r$\n'
@@ -133,7 +137,7 @@ Section "Cai dat ME Launcher" SecInstall
     FileWrite $4 '}$\r$\n'
     FileWrite $4 '$$rtDir = Join-Path $$InstDir "runtime"$\r$\n'
     FileWrite $4 '$$rtBin = Join-Path $$rtDir "bin"$\r$\n'
-    FileWrite $4 'if (!(Test-Path $$rtBin)) { New-Item -ItemType Directory -Path $$rtBin -Force | Out-Null }$\r$\n'
+    FileWrite $4 '$$rtJava = Join-Path $$rtBin "java.exe"$\r$\n'
     FileWrite $4 '$$searchRoots = @("C:\Program Files\Eclipse Adoptium", "C:\Program Files\Java", "C:\Program Files\Microsoft", "$$env:LOCALAPPDATA\Programs\Eclipse Adoptium", "$$env:USERPROFILE\.jdks", "$$env:USERPROFILE\.gradle\jdks")$\r$\n'
     FileWrite $4 '$$jdk25Bin = $$null$\r$\n'
     FileWrite $4 'foreach ($$root in $$searchRoots) {$\r$\n'
@@ -144,36 +148,46 @@ Section "Cai dat ME Launcher" SecInstall
     FileWrite $4 '        if ($$cand) { $$jdk25Bin = $$cand.DirectoryName; break }$\r$\n'
     FileWrite $4 '    }$\r$\n'
     FileWrite $4 '}$\r$\n'
+    FileWrite $4 '$$slimReady = $$false$\r$\n'
     FileWrite $4 'if ($$jdk25Bin) {$\r$\n'
-    FileWrite $4 '    $$jdk25Home = Split-Path $$jdk25Bin -Parent$\r$\n'
-    FileWrite $4 '    Copy-Item -Path "$$jdk25Bin\*" -Destination $$rtBin -Recurse -Force$\r$\n'
-    FileWrite $4 '    foreach ($$dirName in @("lib", "conf")) {$\r$\n'
-    FileWrite $4 '        $$srcSub = Join-Path $$jdk25Home $$dirName$\r$\n'
-    FileWrite $4 '        $$dstSub = Join-Path $$rtDir $$dirName$\r$\n'
-    FileWrite $4 '        if (Test-Path $$srcSub) {$\r$\n'
-    FileWrite $4 '            if (!(Test-Path $$dstSub)) { New-Item -ItemType Directory -Path $$dstSub -Force | Out-Null }$\r$\n'
-    FileWrite $4 '            Copy-Item -Path "$$srcSub\*" -Destination $$dstSub -Recurse -Force$\r$\n'
+    FileWrite $4 '    $$jlinkExe = Join-Path $$jdk25Bin "jlink.exe"$\r$\n'
+    FileWrite $4 '    if (Test-Path $$jlinkExe) {$\r$\n'
+    FileWrite $4 '        $$rtMini = Join-Path $$InstDir "runtime_mini"$\r$\n'
+    FileWrite $4 '        if (Test-Path $$rtMini) { Remove-Item -Path $$rtMini -Recurse -Force }$\r$\n'
+    FileWrite $4 '        & $$jlinkExe --add-modules java.base,java.desktop,java.logging,java.net.http,java.management,jdk.management,java.naming,java.scripting,java.xml,jdk.crypto.ec,jdk.unsupported --strip-debug --no-man-pages --no-header-files --compress=zip-9 --output $$rtMini | Out-Null$\r$\n'
+    FileWrite $4 '        if ((Test-Path (Join-Path $$rtMini "bin\java.exe")) -and (Test-Path (Join-Path $$rtMini "bin\server\jvm.dll"))) {$\r$\n'
+    FileWrite $4 '            if (Test-Path $$rtDir) { Remove-Item -Path $$rtDir -Recurse -Force }$\r$\n'
+    FileWrite $4 '            Rename-Item -Path $$rtMini -NewName "runtime" -Force$\r$\n'
+    FileWrite $4 '            $$slimReady = $$true$\r$\n'
     FileWrite $4 '        }$\r$\n'
     FileWrite $4 '    }$\r$\n'
-    FileWrite $4 '} else {$\r$\n'
-    FileWrite $4 '    $$rtJava = Join-Path $$rtBin "java.exe"$\r$\n'
-    FileWrite $4 '    $$isJava25 = (Test-Path $$rtJava) -and (((& $$rtJava -version 2>&1 | Out-String) -match "version `"25"))$\r$\n'
+    FileWrite $4 '}$\r$\n'
+    FileWrite $4 'if (!$$slimReady) {$\r$\n'
+    FileWrite $4 '    $$relFile = Join-Path $$rtDir "release"$\r$\n'
+    FileWrite $4 '    $$hasRequiredModules = (Test-Path $$relFile) -and ((Get-Content $$relFile -Raw) -match "java\.scripting") -and ((Get-Content $$relFile -Raw) -match "jdk\.management")$\r$\n'
+    FileWrite $4 '    $$isJava25 = (Test-Path $$rtJava) -and $$hasRequiredModules -and (((& $$rtJava -version 2>&1 | Out-String) -match "version `"25"))$\r$\n'
     FileWrite $4 '    if (!$$isJava25) {$\r$\n'
-    FileWrite $4 '        $$jdkZip = "$$env:TEMP\adoptium-jdk25.zip"$\r$\n'
-    FileWrite $4 '        $$jdkExt = "$$env:TEMP\adoptium-jdk25-ext"$\r$\n'
+    FileWrite $4 '        $$jreZip = "$$env:TEMP\adoptium-jre25.zip"$\r$\n'
+    FileWrite $4 '        $$jreExt = "$$env:TEMP\adoptium-jre25-ext"$\r$\n'
     FileWrite $4 '        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12$\r$\n'
-    FileWrite $4 '        (New-Object System.Net.WebClient).DownloadFile("${ADOPTIUM_JDK25_URL}", $$jdkZip)$\r$\n'
-    FileWrite $4 '        if (Test-Path $$jdkZip) {$\r$\n'
-    FileWrite $4 '            Expand-Archive -Path $$jdkZip -DestinationPath $$jdkExt -Force$\r$\n'
-    FileWrite $4 '            $$dlJava = Get-ChildItem -Path $$jdkExt -Filter "java.exe" -Recurse | Select-Object -First 1$\r$\n'
+    FileWrite $4 '        (New-Object System.Net.WebClient).DownloadFile("${ADOPTIUM_JRE25_URL}", $$jreZip)$\r$\n'
+    FileWrite $4 '        if (Test-Path $$jreZip) {$\r$\n'
+    FileWrite $4 '            Expand-Archive -Path $$jreZip -DestinationPath $$jreExt -Force$\r$\n'
+    FileWrite $4 '            $$dlJava = Get-ChildItem -Path $$jreExt -Filter "java.exe" -Recurse | Select-Object -First 1$\r$\n'
     FileWrite $4 '            if ($$dlJava) {$\r$\n'
     FileWrite $4 '                $$dlHome = Split-Path $$dlJava.DirectoryName -Parent$\r$\n'
+    FileWrite $4 '                if (Test-Path $$rtDir) { Remove-Item -Path $$rtDir -Recurse -Force }$\r$\n'
+    FileWrite $4 '                New-Item -ItemType Directory -Path $$rtDir -Force | Out-Null$\r$\n'
     FileWrite $4 '                Copy-Item -Path "$$dlHome\*" -Destination $$rtDir -Recurse -Force$\r$\n'
     FileWrite $4 '            }$\r$\n'
-    FileWrite $4 '            Remove-Item $$jdkZip -Force$\r$\n'
-    FileWrite $4 '            Remove-Item $$jdkExt -Recurse -Force$\r$\n'
+    FileWrite $4 '            Remove-Item $$jreZip -Force$\r$\n'
+    FileWrite $4 '            Remove-Item $$jreExt -Recurse -Force$\r$\n'
     FileWrite $4 '        }$\r$\n'
     FileWrite $4 '    }$\r$\n'
+    FileWrite $4 '}$\r$\n'
+    FileWrite $4 'foreach ($$junk in @("jmods", "include", "man", "demo", "legal", "lib\src.zip")) {$\r$\n'
+    FileWrite $4 '    $$jp = Join-Path $$rtDir $$junk$\r$\n'
+    FileWrite $4 '    if (Test-Path $$jp) { Remove-Item -Path $$jp -Recurse -Force }$\r$\n'
     FileWrite $4 '}$\r$\n'
     FileWrite $4 'if (Test-Path $$appDir) {$\r$\n'
     FileWrite $4 '    $$cfgPath = Join-Path $$appDir "ME Launcher.cfg"$\r$\n'
@@ -187,6 +201,14 @@ Section "Cai dat ME Launcher" SecInstall
     FileWrite $4 '    $$cfgLines.Add("")$\r$\n'
     FileWrite $4 '    $$cfgLines.Add("[JavaOptions]")$\r$\n'
     FileWrite $4 '    $$cfgLines.Add("java-options=-Djpackage.app-path=" + $$d + "APPDIR\..\ME Launcher.exe")$\r$\n'
+    FileWrite $4 '    $$cfgLines.Add("java-options=-Xms32m")$\r$\n'
+    FileWrite $4 '    $$cfgLines.Add("java-options=-Xmx160m")$\r$\n'
+    FileWrite $4 '    $$cfgLines.Add("java-options=-XX:+UseSerialGC")$\r$\n'
+    FileWrite $4 '    $$cfgLines.Add("java-options=-XX:MinHeapFreeRatio=10")$\r$\n'
+    FileWrite $4 '    $$cfgLines.Add("java-options=-XX:MaxHeapFreeRatio=20")$\r$\n'
+    FileWrite $4 '    $$cfgLines.Add("java-options=-XX:TieredStopAtLevel=1")$\r$\n'
+    FileWrite $4 '    $$cfgLines.Add("java-options=-XX:MaxMetaspaceSize=96m")$\r$\n'
+    FileWrite $4 '    $$cfgLines.Add("java-options=-XX:ReservedCodeCacheSize=32m")$\r$\n'
     FileWrite $4 '    $$cfgLines.Add("java-options=-Dfile.encoding=UTF-8")$\r$\n'
     FileWrite $4 '    $$cfgLines.Add("java-options=--enable-native-access=ALL-UNNAMED")$\r$\n'
     FileWrite $4 '    [System.IO.File]::WriteAllLines($$cfgPath, $$cfgLines, [System.Text.Encoding]::ASCII)$\r$\n'

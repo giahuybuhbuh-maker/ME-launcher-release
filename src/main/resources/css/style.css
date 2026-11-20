@@ -51,6 +51,11 @@
     -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.95), 6, 0.75, 0, 1);
 }
 
+/* Tắt dropshadow ở chế độ Low RAM để giải phóng bộ nhớ đệm đồ họa JavaFX */
+.low-ram-mode .label, .low-ram-mode .check-box, .low-ram-mode .radio-button {
+    -fx-effect: null;
+}
+
 /* Chỉnh màu chữ bên trong ô nhập liệu (TextField & Spinner) rõ ràng, dễ nhìn */
 .text-field, .spinner .text-field {
     -fx-background-color: rgba(255, 255, 255, 0.95);

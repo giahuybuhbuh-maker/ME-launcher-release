@@ -24,8 +24,9 @@ import java.util.Deque;
  */
 public class ConsoleWindow {
 
-    private static final int MAX_BUFFER_LINES = 600;
-    private static final Deque<String> LOG_BUFFER = new ArrayDeque<>(MAX_BUFFER_LINES);
+    private static final int LOW_RAM_BUFFER_LINES = 200;
+    private static final int HIGH_RAM_BUFFER_LINES = 600;
+    private static final Deque<String> LOG_BUFFER = new ArrayDeque<>(HIGH_RAM_BUFFER_LINES);
 
     private static Stage consoleStage;
     private static TextArea logArea;
@@ -39,11 +40,30 @@ public class ConsoleWindow {
     private ConsoleWindow() {
     }
 
-    /** Ghi 1 dong log vao bo dem vong (gioi han 600 dong de tiet kiem RAM). */
+    private static int getMaxBufferLines() {
+        try {
+            return ConfigManager.get().isLowRamMode() ? LOW_RAM_BUFFER_LINES : HIGH_RAM_BUFFER_LINES;
+        } catch (Throwable ignored) {
+            return LOW_RAM_BUFFER_LINES;
+        }
+    }
+
+    /** Cat gon bo dem log ngay khi nguoi dung chuyen sang che do Low RAM. */
+    public static void trimBufferIfNeeded() {
+        int maxLines = getMaxBufferLines();
+        synchronized (LOG_BUFFER) {
+            while (LOG_BUFFER.size() > maxLines) {
+                LOG_BUFFER.removeFirst();
+            }
+        }
+    }
+
+    /** Ghi 1 dong log vao bo dem vong (200 dong o Low RAM, 600 dong o High RAM). */
     public static void appendLine(String line) {
         if (line == null) return;
+        int maxLines = getMaxBufferLines();
         synchronized (LOG_BUFFER) {
-            if (LOG_BUFFER.size() >= MAX_BUFFER_LINES) {
+            while (LOG_BUFFER.size() >= maxLines) {
                 LOG_BUFFER.removeFirst();
             }
             LOG_BUFFER.addLast(line);
@@ -53,8 +73,9 @@ public class ConsoleWindow {
             Platform.runLater(() -> {
                 if (logArea != null && consoleStage != null && consoleStage.isShowing()) {
                     logArea.appendText(line + "\n");
-                    if (logArea.getLength() > 120_000) {
-                        logArea.deleteText(0, 40_000);
+                    int maxChars = maxLines == LOW_RAM_BUFFER_LINES ? 40_000 : 120_000;
+                    if (logArea.getLength() > maxChars) {
+                        logArea.deleteText(0, maxChars / 3);
                     }
                     logArea.positionCaret(logArea.getLength());
                 }

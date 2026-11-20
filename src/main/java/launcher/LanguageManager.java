@@ -66,6 +66,9 @@ public class LanguageManager {
         put("Hành vi Launcher khi mở game:", "Launcher behavior on game launch:");
         put("Ẩn Launcher khi mở game", "Hide Launcher when game starts");
         put("Hiện (giữ) Launcher khi mở game", "Keep Launcher open");
+        put("Chế độ RAM Launcher (Low / High):", "Launcher RAM mode (Low / High):");
+        put("Low (Ăn ít RAM <150MB)", "Low (Low RAM <150MB)");
+        put("High (Đủ nền & hiệu ứng 200-400MB)", "High (Full background & effects 200-400MB)");
         put("Ngôn ngữ (Language):", "Language:");
         put("Tự hiện Console khi Launcher hoặc game bị lỗi",
                 "Auto-show Console when Launcher or game crashes");

@@ -104,7 +104,7 @@
                     </HBox>
                 </VBox>
 
-                <!-- 7. Chế độ đồ họa, Giao diện, Ngôn ngữ & Console -->
+                <!-- 7. Chế độ đồ họa, Giao diện, RAM Launcher, Ngôn ngữ & Console -->
                 <VBox spacing="6">
                     <Label text="Chế độ chơi (chỉnh đồ họa vanilla trong options.txt):" styleClass="status-label"/>
                     <HBox spacing="16">
@@ -117,6 +117,11 @@
                     <HBox spacing="16">
                         <RadioButton fx:id="hideLauncherRadio" text="Ẩn Launcher khi mở game" selected="true"/>
                         <RadioButton fx:id="keepLauncherOpenRadio" text="Hiện (giữ) Launcher khi mở game"/>
+                    </HBox>
+                    <Label text="Chế độ RAM Launcher (Low / High):" styleClass="status-label"/>
+                    <HBox spacing="16">
+                        <RadioButton fx:id="lowRamRadio" text="Low (Ăn ít RAM &lt;150MB)" selected="true"/>
+                        <RadioButton fx:id="highRamRadio" text="High (Đủ nền &amp; hiệu ứng 200-400MB)"/>
                     </HBox>
                     <HBox spacing="10" alignment="CENTER_LEFT">
                         <Label text="Ngôn ngữ (Language):" styleClass="status-label"/>

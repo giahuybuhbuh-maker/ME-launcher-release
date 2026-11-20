@@ -1,0 +1,7 @@
+build/
+.gradle/
+backup_assets/
+Ldoc_i5n/
+*.zip
+*.exe
+packaging/LICENSE.txt

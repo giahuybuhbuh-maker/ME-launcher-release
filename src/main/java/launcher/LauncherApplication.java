@@ -18,8 +18,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -50,6 +52,116 @@ public class LauncherApplication extends Application {
 
         // Nạp icon ME_Launcher.ico cho cửa sổ chính và thanh Taskbar
         loadWindowIcons(primaryStage);
+    }
+
+    /**
+     * Bat/tat class CSS low-ram-mode hoac high-ram-mode tren root cua Scene
+     * de giam RAM ngay lap tuc (tat anh nen 7MB & dropshadow khi o che do Low).
+     */
+    public static void applyLauncherRamMode(Scene scene, LauncherConfig config) {
+        if (scene == null || scene.getRoot() == null) return;
+        boolean lowRam = config == null || config.isLowRamMode();
+        List<String> classes = scene.getRoot().getStyleClass();
+        classes.remove("low-ram-mode");
+        classes.remove("high-ram-mode");
+        classes.add(lowRam ? "low-ram-mode" : "high-ram-mode");
+    }
+
+    /**
+     * Tu dong cap nhat co gioi han RAM/GC/Prism trong app/ME Launcher.cfg
+     * (chi ap dung khi dang chay ban dong goi jpackage co file .cfg).
+     */
+    public static void syncLauncherCfgRamMode(LauncherConfig config) {
+        if (config == null) return;
+        Path cfgPath = resolveLauncherCfgPath();
+        if (cfgPath == null || !Files.isRegularFile(cfgPath)) return;
+
+        try {
+            List<String> originalLines = Files.readAllLines(cfgPath, StandardCharsets.UTF_8);
+            List<String> newLines = new ArrayList<>();
+            String appPathOption = "java-options=-Djpackage.app-path=$APPDIR\\..\\ME Launcher.exe";
+            boolean inJavaOptions = false;
+
+            for (String rawLine : originalLines) {
+                String line = rawLine.replace("\uFEFF", "");
+                String trimmed = line.trim();
+                if (trimmed.equalsIgnoreCase("[JavaOptions]")) {
+                    inJavaOptions = true;
+                    continue;
+                }
+                if (inJavaOptions) {
+                    if (trimmed.startsWith("[")) {
+                        inJavaOptions = false;
+                        newLines.add(line);
+                    } else if (trimmed.startsWith("java-options=-Djpackage.app-path=")) {
+                        appPathOption = trimmed;
+                    }
+                    continue;
+                }
+                newLines.add(line);
+            }
+
+            // Bo bot dong trong thua o cuoi phan [Application]
+            while (!newLines.isEmpty() && newLines.get(newLines.size() - 1).isBlank()) {
+                newLines.remove(newLines.size() - 1);
+            }
+
+            newLines.add("");
+            newLines.add("[JavaOptions]");
+            newLines.add(appPathOption);
+
+            if (config.isLowRamMode()) {
+                // Che do Low: muc tieu tong RAM < 150MB
+                newLines.add("java-options=-Xms16m");
+                newLines.add("java-options=-Xmx112m");
+                newLines.add("java-options=-Xss256k");
+                newLines.add("java-options=-XX:+UseSerialGC");
+                newLines.add("java-options=-XX:MinHeapFreeRatio=5");
+                newLines.add("java-options=-XX:MaxHeapFreeRatio=15");
+                newLines.add("java-options=-XX:TieredStopAtLevel=1");
+                newLines.add("java-options=-XX:MaxMetaspaceSize=72m");
+                newLines.add("java-options=-XX:ReservedCodeCacheSize=16m");
+                newLines.add("java-options=-Dprism.maxvram=48m");
+                newLines.add("java-options=-Dprism.targetvram=24m");
+            } else {
+                // Che do High: muc tieu tong RAM ~ 200-400MB (du nen & hieu ung muot)
+                newLines.add("java-options=-Xms64m");
+                newLines.add("java-options=-Xmx256m");
+                newLines.add("java-options=-XX:+UseG1GC");
+                newLines.add("java-options=-XX:MaxMetaspaceSize=128m");
+                newLines.add("java-options=-XX:ReservedCodeCacheSize=48m");
+                newLines.add("java-options=-Dprism.maxvram=192m");
+                newLines.add("java-options=-Dprism.targetvram=96m");
+            }
+
+            newLines.add("java-options=-Dfile.encoding=UTF-8");
+            newLines.add("java-options=--enable-native-access=ALL-UNNAMED");
+
+            Files.write(cfgPath, newLines, StandardCharsets.UTF_8);
+            LauncherLogger.info("Da cap nhat che do RAM (" + config.getLauncherRamMode() + ") vao: " + cfgPath);
+        } catch (Exception e) {
+            LauncherLogger.warn("Khong the cap nhat ME Launcher.cfg: " + e.getMessage());
+        }
+    }
+
+    private static Path resolveLauncherCfgPath() {
+        String appPath = System.getProperty("jpackage.app-path");
+        if (appPath != null && !appPath.isBlank()) {
+            try {
+                Path exe = Path.of(appPath).toAbsolutePath().normalize();
+                Path parent = exe.getParent();
+                if (parent != null) {
+                    Path winOrLinuxCfg = parent.resolve("app").resolve("ME Launcher.cfg");
+                    if (Files.isRegularFile(winOrLinuxCfg)) return winOrLinuxCfg;
+                    if (parent.getParent() != null) {
+                        Path macCfg = parent.getParent().resolve("app").resolve("ME Launcher.cfg");
+                        if (Files.isRegularFile(macCfg)) return macCfg;
+                    }
+                }
+            } catch (Exception ignored) {}
+        }
+        Path localCfg = Path.of("app", "ME Launcher.cfg").toAbsolutePath().normalize();
+        return Files.isRegularFile(localCfg) ? localCfg : null;
     }
 
     /**
@@ -112,16 +224,16 @@ public class LauncherApplication extends Application {
 
         try {
             // Nếu bản thân file là PNG (89 50 4E 47)
-            if (bytes[0] == (byte) 0x89 && bytes[1] == 0x50 && bytes[2] == 0x4E && bytes[3] == 0x47) {
+            if (bytes[0] == (byte) 0x89 && bytes[1] == (byte) 0x50 && bytes[2] == (byte) 0x4E && bytes[3] == (byte) 0x47) {
                 return new Image(new ByteArrayInputStream(bytes));
             }
 
             // Quét tìm frame PNG nhúng bên trong file .ico (nếu có)
             for (int i = 0; i <= bytes.length - 8; i++) {
-                if (bytes[i] == (byte) 0x89 && bytes[i + 1] == 0x50
-                        && bytes[i + 2] == 0x4E && bytes[i + 3] == 0x47
-                        && bytes[i + 4] == 0x0D && bytes[i + 5] == 0x0A
-                        && bytes[i + 6] == 0x1A && bytes[i + 7] == 0x0A) {
+                if (bytes[i] == (byte) 0x89 && bytes[i + 1] == (byte) 0x50
+                        && bytes[i + 2] == (byte) 0x4E && bytes[i + 3] == (byte) 0x47
+                        && bytes[i + 4] == (byte) 0x0D && bytes[i + 5] == (byte) 0x0A
+                        && bytes[i + 6] == (byte) 0x1A && bytes[i + 7] == (byte) 0x0A) {
                     Image pngImg = new Image(new ByteArrayInputStream(bytes, i, bytes.length - i));
                     if (!pngImg.isError() && pngImg.getWidth() > 0) {
                         return pngImg;
@@ -216,6 +328,9 @@ public class LauncherApplication extends Application {
         applyStylesheets(scene, config);
 
         primaryStage.setScene(scene);
+        if (config.isLowRamMode()) {
+            System.gc();
+        }
         LauncherLogger.info(APP_TITLE + " da khoi dong thanh cong.");
     }
 
@@ -226,6 +341,8 @@ public class LauncherApplication extends Application {
     }
 
     private void applyStylesheets(Scene scene, LauncherConfig config) {
+        // Gan class low-ram-mode / high-ram-mode truoc khi nap CSS de khong tai anh nen thua o che do Low
+        applyLauncherRamMode(scene, config);
         scene.getStylesheets().add(
                 Objects.requireNonNull(getClass().getResource("/css/style.css")).toExternalForm());
         if (config.isDarkTheme()) {

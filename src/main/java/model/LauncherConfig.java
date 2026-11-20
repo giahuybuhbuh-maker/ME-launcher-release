@@ -35,6 +35,7 @@ public class LauncherConfig {
     private boolean hideLauncherOnPlay = true;
     private boolean showConsoleOnError = true;
     private String language = "vi";
+    private String launcherRamMode = "low"; // "low" (<150MB) hoac "high" (200-400MB)
     private String customJvmArgs = DEFAULT_JVM_ARGS;
     private String customGameArgs = "";
 
@@ -99,9 +100,20 @@ public class LauncherConfig {
 
     public String getCustomGameArgs() { return customGameArgs == null ? "" : customGameArgs; }
     public void setCustomGameArgs(String customGameArgs) { this.customGameArgs = customGameArgs; }
+
     public String getLanguage() { return (language == null || language.isBlank()) ? "vi" : language; }
     public void setLanguage(String language) { this.language = language; }
 
     public boolean isShowConsoleOnError() { return showConsoleOnError; }
     public void setShowConsoleOnError(boolean showConsoleOnError) { this.showConsoleOnError = showConsoleOnError; }
+
+    public String getLauncherRamMode() {
+        return "high".equalsIgnoreCase(launcherRamMode) ? "high" : "low";
+    }
+    public void setLauncherRamMode(String launcherRamMode) {
+        this.launcherRamMode = "high".equalsIgnoreCase(launcherRamMode) ? "high" : "low";
+    }
+    public boolean isLowRamMode() {
+        return !"high".equalsIgnoreCase(launcherRamMode);
+    }
 }

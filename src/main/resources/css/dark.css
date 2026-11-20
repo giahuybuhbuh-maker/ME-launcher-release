@@ -43,7 +43,13 @@
 .progress-indicator {
     -fx-progress-color: #4caf50;
 }
-.root-pane {
-      -fx-background-image: url("/assets/background.png");
-      -fx-background-size: cover;
- }
+
+.root-pane.high-ram-mode {
+    -fx-background-image: url("/assets/background.png");
+    -fx-background-size: cover;
+}
+
+.root-pane.low-ram-mode {
+    -fx-background-image: none;
+    -fx-background-color: #1b1f24;
+}

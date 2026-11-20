@@ -8,6 +8,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.Slider;
@@ -21,7 +22,6 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.scene.control.ComboBox;
 import model.LauncherConfig;
 
 import java.io.File;
@@ -45,6 +45,8 @@ public class SettingsController {
     @FXML private RadioButton highQualityRadio;
     @FXML private RadioButton hideLauncherRadio;
     @FXML private RadioButton keepLauncherOpenRadio;
+    @FXML private RadioButton lowRamRadio;
+    @FXML private RadioButton highRamRadio;
     @FXML private Label infoLabel;
 
     @FXML private Slider maxMemorySlider;
@@ -130,15 +132,27 @@ public class SettingsController {
             }
         }
 
-        Platform.runLater(this::enhanceReadability);
+        if (lowRamRadio != null && highRamRadio != null) {
+            ToggleGroup ramModeGroup = new ToggleGroup();
+            lowRamRadio.setToggleGroup(ramModeGroup);
+            highRamRadio.setToggleGroup(ramModeGroup);
+            if (config.isLowRamMode()) {
+                lowRamRadio.setSelected(true);
+            } else {
+                highRamRadio.setSelected(true);
+            }
+        }
+
         if (languageComboBox != null) {
-        languageComboBox.getItems().setAll("Tiếng Việt", "English");
-        languageComboBox.getSelectionModel().select(
-               "en".equalsIgnoreCase(config.getLanguage()) ? "English" : "Tiếng Việt");
+            languageComboBox.getItems().setAll("Tiếng Việt", "English");
+            languageComboBox.getSelectionModel().select(
+                    "en".equalsIgnoreCase(config.getLanguage()) ? "English" : "Tiếng Việt");
         }
         if (showConsoleOnErrorCheckBox != null) {
-        showConsoleOnErrorCheckBox.setSelected(config.isShowConsoleOnError());
+            showConsoleOnErrorCheckBox.setSelected(config.isShowConsoleOnError());
         }
+
+        Platform.runLater(this::enhanceReadability);
     }
 
     /**
@@ -184,6 +198,8 @@ public class SettingsController {
     private void enhanceReadability() {
         if (infoLabel == null || infoLabel.getScene() == null) return;
         Scene scene = infoLabel.getScene();
+        LauncherConfig config = ConfigManager.get();
+
         if (scene.getWindow() instanceof Stage stage) {
             LauncherApplication.loadWindowIcons(stage);
             stage.setWidth(Math.max(stage.getWidth(), 640));
@@ -192,8 +208,12 @@ public class SettingsController {
         Parent root = scene.getRoot();
         if (root == null) return;
 
-        String readableTextStyle = "-fx-text-fill: #FFFFFF; -fx-font-weight: 700; "
-                + "-fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.98), 7, 0.85, 0, 1);";
+        LauncherApplication.applyLauncherRamMode(scene, config);
+
+        // O che do Low RAM: bo dropshadow tren tung chu de giam 20-35MB RAM do hoa JavaFX
+        String readableTextStyle = config.isLowRamMode()
+                ? "-fx-text-fill: #FFFFFF; -fx-font-weight: 700; -fx-effect: null;"
+                : "-fx-text-fill: #FFFFFF; -fx-font-weight: 700; -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.98), 7, 0.85, 0, 1);";
         applyStyleRecursively(root, readableTextStyle);
 
         // Áp dụng góc vuông 90 độ cho toàn bộ cửa sổ Cài đặt
@@ -266,6 +286,7 @@ public class SettingsController {
         darkThemeCheckBox.setSelected(true);
         ultrafastRadio.setSelected(true);
         if (hideLauncherRadio != null) hideLauncherRadio.setSelected(true);
+        if (lowRamRadio != null) lowRamRadio.setSelected(true);
 
         if (resWidthField != null) resWidthField.setText("925");
         if (resHeightField != null) resHeightField.setText("530");
@@ -332,6 +353,10 @@ public class SettingsController {
             config.setHideLauncherOnPlay(hideLauncherRadio.isSelected());
         }
 
+        if (lowRamRadio != null && highRamRadio != null) {
+            config.setLauncherRamMode(highRamRadio.isSelected() ? "high" : "low");
+        }
+
         if (customJvmArgsField != null) config.setCustomJvmArgs(customJvmArgsField.getText().trim());
         if (customGameArgsField != null) config.setCustomGameArgs(customGameArgsField.getText().trim());
 
@@ -347,6 +372,8 @@ public class SettingsController {
         }
 
         ConfigManager.save();
+        LauncherApplication.syncLauncherCfgRamMode(config);
+        ConsoleWindow.trimBufferIfNeeded();
         ConsoleWindow.refreshLanguage();
         applyWindowsHighPerformanceSetting(cleanJavaPath);
 
@@ -355,6 +382,7 @@ public class SettingsController {
                 + ", res=" + config.getGameWidth() + "x" + config.getGameHeight()
                 + ", fullscreen=" + config.isFullscreen()
                 + ", hideLauncherOnPlay=" + config.isHideLauncherOnPlay()
+                + ", launcherRamMode=" + config.getLauncherRamMode()
                 + ", language=" + config.getLanguage()
                 + ", showConsoleOnError=" + config.isShowConsoleOnError());
         closeWindow();
@@ -457,13 +485,14 @@ public class SettingsController {
             Parent root = loader.load();
 
             Stage aboutStage = new Stage();
-            aboutStage.setTitle("Giới thiệu");
+            aboutStage.setTitle(LanguageManager.t("about.title"));
             aboutStage.initOwner(infoLabel.getScene().getWindow());
             aboutStage.initModality(Modality.WINDOW_MODAL);
             aboutStage.setResizable(false);
             LauncherApplication.loadWindowIcons(aboutStage);
 
             Scene scene = new Scene(root);
+            LauncherApplication.applyLauncherRamMode(scene, ConfigManager.get());
             scene.getStylesheets().addAll(infoLabel.getScene().getStylesheets());
             Utils.applySquareTheme(scene);
             LanguageManager.applyToScene(scene);
@@ -473,6 +502,7 @@ public class SettingsController {
             LauncherLogger.error("Khong mo duoc About", e);
         }
     }
+
     @FXML
     private void onOpenConsoleClicked() {
         ConsoleWindow.show();

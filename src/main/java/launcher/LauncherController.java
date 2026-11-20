@@ -913,6 +913,10 @@ public class LauncherController {
             ConfigManager.save();
             if (settingsButton.getScene() != null) {
                 LanguageManager.applyToScene(settingsButton.getScene());
+                LauncherApplication.applyLauncherRamMode(settingsButton.getScene(), ConfigManager.get());
+              if (ConfigManager.get().isLowRamMode()) {
+                  System.gc();
+              }
             }
             // Tự động làm mới lại danh sách phiên bản theo các ô tích (Snapshots, Beta, Alpha, Bản cũ, Bản Mod)
             loadVersionsAsync(true);
