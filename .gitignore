@@ -5,3 +5,6 @@ Ldoc_i5n/
 *.zip
 *.exe
 packaging/LICENSE.txt
+
+runtime/java/*
+!runtime/java/.gitkeep
