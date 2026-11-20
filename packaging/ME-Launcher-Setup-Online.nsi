@@ -24,7 +24,9 @@ VIAddVersionKey "FileDescription" "ME Launcher Installer"
 VIAddVersionKey "FileVersion" "0.1.7.0"
 VIAddVersionKey "LegalCopyright" "Copyright (c) 2026"
 
-!define DOWNLOAD_URL "https://github.com/giahuybuhbuh-maker/ME-launcher-release/releases/download/v0.1.7/Me-Launcher-v0.1.7-alpha01.zip"
+!ifndef DOWNLOAD_URL
+  !define DOWNLOAD_URL "https://github.com/giahuybuhbuh-maker/ME-launcher-release/releases/download/v0.1.7-beta02/ME-Launcher-v0.1.7-beta02.zip"
+!endif
 !define ADOPTIUM_JDK25_URL "https://api.adoptium.net/v3/binary/latest/25/ga/windows/x64/jdk/hotspot/normal/eclipse"
 
 !define MUI_ABORTWARNING
