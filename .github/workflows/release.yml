@@ -42,6 +42,72 @@ jobs:
       - name: Dong goi jpackageImage
         run: gradle clean jpackageImage --no-daemon
 
+      - name: Smoke Test Linux (chay thu 10s tren man hinh ao)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          if ! command -v xvfb-run >/dev/null 2>&1; then
+            sudo apt-get update && sudo apt-get install -y xvfb
+          fi
+
+          APP_BIN="$GITHUB_WORKSPACE/build/dist/ME Launcher/bin/ME Launcher"
+          test -x "$APP_BIN" || { echo "Khong tim thay file chay Linux: $APP_BIN"; exit 1; }
+
+          cd /tmp
+          JAVA_TOOL_OPTIONS="-Dprism.order=sw" xvfb-run -a "$APP_BIN" > /tmp/smoke-linux.log 2>&1 &
+          APP_PID=$!
+
+          sleep 10
+
+          if kill -0 "$APP_PID" 2>/dev/null; then
+            echo "=== OK: ME Launcher van song sau 10 giay tren Linux ==="
+            kill "$APP_PID" 2>/dev/null || true
+            wait "$APP_PID" 2>/dev/null || true
+          else
+            echo "=== CRASH: ME Launcher bi thoat som tren Linux ==="
+            cat /tmp/smoke-linux.log || true
+            exit 1
+          fi
+
+          echo "=== Log chay thu Linux ==="
+          cat /tmp/smoke-linux.log || true
+
+          if grep -Eq "Failed to launch JVM|Loi khong xac dinh|Khong the mo man hinh chinh" /tmp/smoke-linux.log; then
+            echo "=== PHAT HIEN LOI NGHIEM TRONG TRONG LOG ==="
+            exit 1
+          fi
+
+      - name: Smoke Test macOS (chay thu 10s)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          APP_BIN="$GITHUB_WORKSPACE/build/dist/ME Launcher.app/Contents/MacOS/ME Launcher"
+          test -x "$APP_BIN" || { echo "Khong tim thay file chay macOS: $APP_BIN"; exit 1; }
+
+          cd /tmp
+          JAVA_TOOL_OPTIONS="-Dprism.order=sw" "$APP_BIN" > /tmp/smoke-macos.log 2>&1 &
+          APP_PID=$!
+
+          sleep 10
+
+          if kill -0 "$APP_PID" 2>/dev/null; then
+            echo "=== OK: ME Launcher van song sau 10 giay tren macOS ==="
+            kill "$APP_PID" 2>/dev/null || true
+            wait "$APP_PID" 2>/dev/null || true
+          else
+            echo "=== CRASH: ME Launcher bi thoat som tren macOS ==="
+            cat /tmp/smoke-macos.log || true
+            exit 1
+          fi
+
+          echo "=== Log chay thu macOS ==="
+          cat /tmp/smoke-macos.log || true
+
+          if grep -Eq "Failed to launch JVM|Loi khong xac dinh|Khong the mo man hinh chinh" /tmp/smoke-macos.log; then
+            echo "=== PHAT HIEN LOI NGHIEM TRONG TRONG LOG ==="
+            exit 1
+          fi
+
       - name: Nen ban Windows (.zip)
         if: runner.os == 'Windows'
         shell: pwsh
