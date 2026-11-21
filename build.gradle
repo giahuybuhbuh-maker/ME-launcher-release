@@ -54,24 +54,35 @@ tasks.named('run') {
     ]
 }
 
-// Dong goi thanh app-image: 1 thu muc portable chua san .exe + JRE rieng
+// Dong goi thanh app-image: 1 thu muc portable chua san .exe/.app + JRE rieng
 // (nguoi dung cuoi KHONG can cai Java). Chay: gradle jpackageImage
-// Ket qua nam o: build/dist/ME Launcher/ME Launcher.exe
+// Ket qua nam o: build/dist/ME Launcher (Windows/Linux) hoac build/dist/ME Launcher.app (macOS)
 tasks.register('jpackageImage', Exec) {
     group = 'distribution'
-    description = 'Dong goi launcher thanh app-image (.exe portable) bang jpackage'
+    description = 'Dong goi launcher thanh app-image portable bang jpackage (Windows/Linux/macOS)'
     dependsOn 'installDist'
 
     def installDir = layout.buildDirectory.dir("install/${project.name}/lib").get().asFile
     def destDir = layout.buildDirectory.dir("dist").get().asFile
-    def iconFile = file('src/main/resources/assets/ME_Launcher.ico')
-    if (!iconFile.exists()) {
-        iconFile = file('src/main/resources/assets/icon.ico')
-    }
-    // Lay duong dan luc CAU HINH (an toan) de dung lai luc CHAY ben duoi,
-    // tranh goi truc tiep cac ham cua Project (project.delete/copy) luc
-    // thuc thi - kieu goi nay dang bi Gradle canh bao se cam hoan toan.
     def packagingDir = file('packaging')
+
+    // Tu dong chon dung dinh dang icon theo he dieu hanh dang build
+    def osName = System.getProperty('os.name').toLowerCase()
+    def isWindows = osName.contains('win')
+    def isLinux = osName.contains('linux')
+    def isMac = osName.contains('mac')
+
+    File iconFile = null
+    if (isWindows) {
+        iconFile = file('src/main/resources/assets/ME_Launcher.ico')
+        if (!iconFile.exists()) {
+            iconFile = file('src/main/resources/assets/icon.ico')
+        }
+    } else if (isLinux) {
+        iconFile = file('src/main/resources/assets/logo.png')
+    } else if (isMac) {
+        iconFile = file('src/main/resources/assets/ME_Launcher.icns')
+    }
 
     doFirst {
         destDir.deleteDir() // ham co san cua Groovy tren File, khong phai Project API
@@ -98,23 +109,24 @@ tasks.register('jpackageImage', Exec) {
             '--java-options', '--enable-native-access=ALL-UNNAMED',
             '--jlink-options', '--strip-native-commands --strip-debug --no-man-pages --no-header-files --compress=zip-9'
     ]
-    // Tu dong dung ME_Launcher.ico (hoac icon.ico) trong src/main/resources/assets/
-    if (iconFile.exists()) {
+    if (iconFile != null && iconFile.exists()) {
         cmd += ['--icon', iconFile.absolutePath]
     }
     commandLine = cmd
 
-    // Sau khi dong goi xong, tu dong copy kem cac file tao shortcut Desktop
-    // (ca .vbs lan .bat - tuy may co the chan cai nay nhung khong chan cai kia)
-    // vao chung thu muc voi ME Launcher.exe. Dung File.bytes (Groovy GDK)
-    // thay vi copy{} (goi Project.copy luc thuc thi) cung vi ly do tren.
+    // Chi copy 2 file tao shortcut Windows (.vbs/.bat) khi build tren Windows
+    // de tranh loi FileNotFoundException tren macOS (noi jpackage tao ME Launcher.app)
     doLast {
-        def destFolder = new File(destDir, 'ME Launcher')
-        ['Tao-shortcut-Desktop.vbs', 'Tao-shortcut-Desktop.bat'].each { fileName ->
-            def source = new File(packagingDir, fileName)
-            if (source.exists()) {
-                def target = new File(destFolder, fileName)
-                target.bytes = source.bytes
+        if (isWindows) {
+            def destFolder = new File(destDir, 'ME Launcher')
+            if (destFolder.exists()) {
+                ['Tao-shortcut-Desktop.vbs', 'Tao-shortcut-Desktop.bat'].each { fileName ->
+                    def source = new File(packagingDir, fileName)
+                    if (source.exists()) {
+                        def target = new File(destFolder, fileName)
+                        target.bytes = source.bytes
+                    }
+                }
             }
         }
     }
