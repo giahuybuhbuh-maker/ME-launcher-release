@@ -110,10 +110,13 @@ public class LauncherApplication extends Application {
             newLines.add("[JavaOptions]");
             newLines.add(appPathOption);
 
+            // macOS can tran -Xmx cao hon de tranh OutOfMemoryError khi nap bang Apple Color Emoji (sbix)
+            boolean isMac = System.getProperty("os.name", "").toLowerCase().contains("mac");
+
             if (config.isLowRamMode()) {
                 // Che do Low: muc tieu tong RAM < 150MB
                 newLines.add("java-options=-Xms16m");
-                newLines.add("java-options=-Xmx112m");
+                newLines.add("java-options=" + (isMac ? "-Xmx384m" : "-Xmx112m"));
                 newLines.add("java-options=-Xss256k");
                 newLines.add("java-options=-XX:+UseSerialGC");
                 newLines.add("java-options=-XX:MinHeapFreeRatio=5");
@@ -126,7 +129,7 @@ public class LauncherApplication extends Application {
             } else {
                 // Che do High: muc tieu tong RAM ~ 200-400MB (du nen & hieu ung muot)
                 newLines.add("java-options=-Xms64m");
-                newLines.add("java-options=-Xmx256m");
+                newLines.add("java-options=" + (isMac ? "-Xmx512m" : "-Xmx256m"));
                 newLines.add("java-options=-XX:+UseG1GC");
                 newLines.add("java-options=-XX:MaxMetaspaceSize=128m");
                 newLines.add("java-options=-XX:ReservedCodeCacheSize=48m");
@@ -156,6 +159,8 @@ public class LauncherApplication extends Application {
                     if (parent.getParent() != null) {
                         Path macCfg = parent.getParent().resolve("app").resolve("ME Launcher.cfg");
                         if (Files.isRegularFile(macCfg)) return macCfg;
+                        Path linuxCfg = parent.getParent().resolve("lib").resolve("app").resolve("ME Launcher.cfg");
+                        if (Files.isRegularFile(linuxCfg)) return linuxCfg;
                     }
                 }
             } catch (Exception ignored) {}

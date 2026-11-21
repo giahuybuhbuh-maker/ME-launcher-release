@@ -98,7 +98,7 @@ tasks.register('jpackageImage', Exec) {
             '--main-class', 'launcher.Main',
             '--app-version', project.version.toString(),
             '--java-options', '-Xms32m',
-            '--java-options', '-Xmx160m',
+            '--java-options', (isMac ? '-Xmx384m' : '-Xmx160m'),
             '--java-options', '-XX:+UseSerialGC',
             '--java-options', '-XX:MinHeapFreeRatio=10',
             '--java-options', '-XX:MaxHeapFreeRatio=20',
