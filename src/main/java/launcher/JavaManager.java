@@ -141,7 +141,7 @@ public class JavaManager {
 
         List<FileDownloader.DownloadTask> tasks = new ArrayList<>();
         List<Path> executablePaths = new ArrayList<>();
-        List> symlinks = new ArrayList<>();
+        List<Map.Entry<Path, String>> symlinks = new ArrayList<>();
 
         for (Map.Entry<String, JsonElement> entry : files.entrySet()) {
             String relativePath = entry.getKey();
