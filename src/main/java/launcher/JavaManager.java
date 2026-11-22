@@ -8,12 +8,14 @@ import network.FileDownloader;
 import network.HttpClient;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 /**
  * Tu dong tai va quan ly JRE rieng cho tung phien ban Minecraft, luu trong
@@ -89,7 +91,22 @@ public class JavaManager {
         }
 
         LauncherLogger.info("Chua co JRE '" + component + "' cho " + platformKey + ", bat dau tai tu Mojang...");
-        downloadRuntime(component, platformKey, componentDir);
+        try {
+            downloadRuntime(component, platformKey, componentDir);
+        } catch (IOException downloadError) {
+            // Khi mat mang/Offline, uu tien quet ban Java day du co san tren may (he thong, .minecraft/runtime, runtime/java)
+            // thay vi roi thang ve runtime noi bo cua Launcher (Java 25 co the khong hop mot so ban Forge 1.20.1).
+            Path localJavaHome = findLocalCompatibleJavaHome(majorVersion);
+            if (localJavaHome != null) {
+                Path localBinary = resolveJavaBinaryDirect(localJavaHome);
+                Utils.ensureExecutable(localBinary);
+                runtime.setPath(localJavaHome.toAbsolutePath().toString());
+                LauncherLogger.warn("Khong tai duoc JRE '" + component + "' online, da chon Java co san tren may: "
+                        + runtime.getPath());
+                return runtime;
+            }
+            throw downloadError;
+        }
 
         Path downloadedBinary = resolveJavaBinary(componentDir);
         Utils.ensureExecutable(downloadedBinary);
@@ -124,7 +141,7 @@ public class JavaManager {
 
         List<FileDownloader.DownloadTask> tasks = new ArrayList<>();
         List<Path> executablePaths = new ArrayList<>();
-        List<Map.Entry<Path, String>> symlinks = new ArrayList<>();
+        List> symlinks = new ArrayList<>();
 
         for (Map.Entry<String, JsonElement> entry : files.entrySet()) {
             String relativePath = entry.getKey();
@@ -183,4 +200,168 @@ public class JavaManager {
             if (!ok) LauncherLogger.warn("Khong the cap quyen thuc thi cho: " + exe);
         }
     }
+
+    private Path resolveJavaBinaryDirect(Path javaHome) {
+        String javaBinaryRelative = Utils.getOperatingSystem() == Utils.OS.WINDOWS
+                ? "bin/javaw.exe" : "bin/java";
+        return javaHome.resolve(javaBinaryRelative);
+    }
+
+    /**
+     * Quet cac ban Java day du co san tren may khi Offline.
+     * Uu tien: (1) Dung majorVersion yeu cau -> (2) Ban cao hon gan nhat (chi ap dung cho Java >= 17),
+     * bat buoc phai co module jdk.zipfs (neu Java 9+) de khong crash Forge/NeoForge/Vanilla.
+     */
+    private Path findLocalCompatibleJavaHome(int requiredMajorVersion) {
+        List<Path> candidates = new ArrayList<>();
+
+        // 1. Cac JRE da tai truoc do cua ME Launcher trong runtime/java/
+        collectJavaHomes(RUNTIME_DIR, 2, candidates);
+
+        // 2. Bien moi truong JAVA_HOME
+        String envJavaHome = System.getenv("JAVA_HOME");
+        if (envJavaHome != null && !envJavaHome.isBlank()) {
+            collectJavaHomes(Path.of(envJavaHome), 0, candidates);
+        }
+
+        // 3. Cac thu muc cai Java he thong & Minecraft Launcher goc theo tung he dieu hanh
+        Utils.OS os = Utils.getOperatingSystem();
+        String userHome = System.getProperty("user.home", "");
+        if (os == Utils.OS.WINDOWS) {
+            for (String dir : List.of(
+                    "C:\\Program Files\\Eclipse Adoptium",
+                    "C:\\Program Files\\Java",
+                    "C:\\Program Files\\Microsoft",
+                    "C:\\Program Files\\Zulu",
+                    "C:\\Program Files\\BellSoft",
+                    "C:\\Program Files\\AdoptOpenJDK")) {
+                collectJavaHomes(Path.of(dir), 2, candidates);
+            }
+            String localAppData = System.getenv("LOCALAPPDATA");
+            if (localAppData != null && !localAppData.isBlank()) {
+                collectJavaHomes(Path.of(localAppData, "Programs", "Eclipse Adoptium"), 2, candidates);
+                collectJavaHomes(Path.of(localAppData, "Packages",
+                        "Microsoft.4297127D64EC6_8wekyb3d8bbwe", "LocalCache", "Local", "runtime"), 4, candidates);
+            }
+            String appData = System.getenv("APPDATA");
+            if (appData != null && !appData.isBlank()) {
+                collectJavaHomes(Path.of(appData, ".minecraft", "runtime"), 4, candidates);
+            }
+            if (!userHome.isBlank()) {
+                collectJavaHomes(Path.of(userHome, ".jdks"), 2, candidates);
+            }
+        } else if (os == Utils.OS.MAC) {
+            collectJavaHomes(Path.of("/Library/Java/JavaVirtualMachines"), 2, candidates);
+            if (!userHome.isBlank()) {
+                collectJavaHomes(Path.of(userHome, "Library", "Java", "JavaVirtualMachines"), 2, candidates);
+                collectJavaHomes(Path.of(userHome, "Library", "Application Support", "minecraft", "runtime"), 4, candidates);
+            }
+        } else {
+            collectJavaHomes(Path.of("/usr/lib/jvm"), 2, candidates);
+            if (!userHome.isBlank()) {
+                collectJavaHomes(Path.of(userHome, ".jdks"), 2, candidates);
+                collectJavaHomes(Path.of(userHome, ".minecraft", "runtime"), 4, candidates);
+            }
+        }
+
+        Path bestHome = null;
+        int bestScore = Integer.MAX_VALUE;
+
+        for (Path home : candidates) {
+            LocalJavaInfo info = readLocalJavaInfo(home);
+            if (info == null || !info.hasZipFs) continue;
+
+            // Java 8 (Minecraft cu) bat buoc dung dung Java 8, khong dung Java 17/21 thay the
+            if (requiredMajorVersion <= 8) {
+                if (info.majorVersion != 8) continue;
+            } else {
+                if (info.majorVersion < requiredMajorVersion) continue;
+            }
+
+            // Diem cang thap cang uu tien: khop dung majorVersion = 0, cao hon thi chon ban gan nhat
+            int score = (info.majorVersion - requiredMajorVersion) * 10 + (info.hasNamingDns ? 0 : 1);
+            if (score < bestScore) {
+                bestScore = score;
+                bestHome = home;
+            }
+        }
+
+        return bestHome;
+    }
+
+    private void collectJavaHomes(Path dir, int maxDepth, List<Path> results) {
+        if (dir == null || maxDepth < 0 || !Files.isDirectory(dir)) return;
+
+        // Kiem tra truc tiep thu muc hien tai va cau truc bundle tren macOS
+        for (Path candidate : List.of(
+                dir,
+                dir.resolve("Contents").resolve("Home"),
+                dir.resolve("jre.bundle").resolve("Contents").resolve("Home"))) {
+            if (Files.isRegularFile(resolveJavaBinaryDirect(candidate))) {
+                results.add(candidate);
+                return; // da la thu muc Java, khong can quet sau vao ben trong bin/lib
+            }
+        }
+
+        if (maxDepth == 0) return;
+
+        try (Stream<Path> children = Files.list(dir)) {
+            children.forEach(child -> {
+                if (Files.isDirectory(child) && !Files.isSymbolicLink(child)) {
+                    collectJavaHomes(child, maxDepth - 1, results);
+                }
+            });
+        } catch (Exception ignored) {}
+    }
+
+    private LocalJavaInfo readLocalJavaInfo(Path javaHome) {
+        Path releaseFile = javaHome.resolve("release");
+        if (!Files.isRegularFile(releaseFile)) return null;
+
+        try {
+            String content = Files.readString(releaseFile, StandardCharsets.UTF_8);
+            int major = -1;
+            boolean hasModulesLine = false;
+            boolean hasZipFs = false;
+            boolean hasNamingDns = false;
+
+            for (String line : content.split("\\R")) {
+                String trimmed = line.trim();
+                if (trimmed.startsWith("JAVA_VERSION=")) {
+                    major = parseMajorVersion(trimmed.substring("JAVA_VERSION=".length()));
+                } else if (trimmed.startsWith("MODULES=")) {
+                    hasModulesLine = true;
+                    hasZipFs = trimmed.contains("jdk.zipfs");
+                    hasNamingDns = trimmed.contains("jdk.naming.dns");
+                }
+            }
+
+            if (major <= 0) return null;
+            if (major <= 8 || !hasModulesLine) {
+                hasZipFs = true;
+                hasNamingDns = true;
+            }
+            return new LocalJavaInfo(major, hasZipFs, hasNamingDns);
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private int parseMajorVersion(String raw) {
+        if (raw == null) return -1;
+        String clean = raw.replace("\"", "").trim();
+        if (clean.isEmpty()) return -1;
+        String[] parts = clean.split("[._-]");
+        try {
+            int first = Integer.parseInt(parts[0]);
+            if (first == 1 && parts.length > 1) {
+                return Integer.parseInt(parts[1]);
+            }
+            return first;
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+
+    private record LocalJavaInfo(int majorVersion, boolean hasZipFs, boolean hasNamingDns) {}
 }
