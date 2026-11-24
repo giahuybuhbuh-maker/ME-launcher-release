@@ -12,13 +12,14 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="launcher.SettingsController"
-      spacing="12" styleClass="root-pane"
-      prefWidth="650" prefHeight="640">
+      spacing="12" styleClass="root-pane settings-root"
+      prefWidth="680" prefHeight="660">
     <padding>
         <Insets top="18" right="20" bottom="18" left="20"/>
     </padding>
@@ -31,21 +32,60 @@
     </HBox>
 
     <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
-                style="-fx-background: transparent; -fx-background-color: rgba(15, 23, 42, 0.82); -fx-background-radius: 0;">
+                style="-fx-background: transparent; -fx-background-color: rgba(15, 23, 42, 0.88); -fx-background-radius: 0;">
         <content>
-            <VBox fx:id="settingsContainer" spacing="12" style="-fx-padding: 16;">
+            <VBox fx:id="settingsContainer" spacing="14" style="-fx-padding: 16;">
 
                 <!-- 1. Thư mục lưu game -->
-                <VBox spacing="4">
+                <VBox spacing="6" styleClass="settings-card">
                     <Label text="Thư mục lưu file game (Directory):" styleClass="status-label"/>
                     <HBox spacing="8">
                         <TextField fx:id="gameDirField" promptText="vd: D:\MinecraftData (để trống = thư mục 'game' mặc định)" HBox.hgrow="ALWAYS"/>
-                        <Button fx:id="browseGameDirButton" text="📁 Browse..." onAction="#onBrowseGameDirClicked" styleClass="secondary-button"/>
+                        <Button fx:id="browseGameDirButton" text="Browse..." onAction="#onBrowseGameDirClicked" styleClass="secondary-button"/>
                     </HBox>
                 </VBox>
 
-                <!-- 2. Độ phân giải & Fullscreen -->
-                <VBox spacing="4">
+                <!-- 2. Giao diện & Hình nền (MỚI) -->
+                <VBox spacing="8" styleClass="settings-card">
+                    <Label text="Giao diện &amp; Hình nền (Appearance &amp; Background):" styleClass="section-header-label"/>
+
+                    <Label text="Bố cục giao diện (UI Layout):" styleClass="status-label"/>
+                    <HBox spacing="18" alignment="CENTER_LEFT">
+                        <RadioButton fx:id="classicLayoutRadio" text="Cổ điển (Sidebar + Thanh đáy)" selected="true"/>
+                        <RadioButton fx:id="modernLayoutRadio" text="Tối giản (Thanh icon + Nút Chơi giữa)"/>
+                    </HBox>
+
+                    <Label text="Hình nền Launcher (Background):" styleClass="status-label"/>
+                    <HBox spacing="8" alignment="CENTER_LEFT">
+                        <TextField fx:id="customBackgroundField"
+                                   promptText="Mặc định (để trống = dùng hình nền mặc định)"
+                                   editable="false" HBox.hgrow="ALWAYS"/>
+                        <Button text="Chọn ảnh..." onAction="#onBrowseBackgroundClicked" styleClass="secondary-button"/>
+                        <Button text="Mặc định" onAction="#onResetBackgroundClicked" styleClass="secondary-button"/>
+                    </HBox>
+
+                    <HBox spacing="14" alignment="CENTER_LEFT">
+                        <StackPane fx:id="backgroundPreviewPane" prefWidth="176" prefHeight="104" minWidth="176" minHeight="104"
+                                   styleClass="bg-preview-box">
+                            <Region fx:id="backgroundPreviewOverlay"/>
+                            <Label fx:id="backgroundPreviewLabel" text="Xem trước hình nền" styleClass="status-label"/>
+                        </StackPane>
+
+                        <VBox spacing="6" HBox.hgrow="ALWAYS">
+                            <HBox spacing="8" alignment="CENTER_LEFT">
+                                <Label text="Độ tối lớp phủ nền (Overlay):" styleClass="status-label"/>
+                                <Label fx:id="backgroundOverlayValueLabel" text="45%" styleClass="status-label"/>
+                            </HBox>
+                            <Slider fx:id="backgroundOverlaySlider" min="0" max="80" value="45"
+                                    majorTickUnit="20" minorTickCount="1"
+                                    showTickMarks="true" showTickLabels="true"/>
+                            <CheckBox fx:id="darkThemeCheckBox" text="Giao diện tối (dark theme)"/>
+                        </VBox>
+                    </HBox>
+                </VBox>
+
+                <!-- 3. Độ phân giải & Fullscreen -->
+                <VBox spacing="6" styleClass="settings-card">
                     <Label text="Độ phân giải (Resolution):" styleClass="status-label"/>
                     <HBox spacing="10" alignment="CENTER_LEFT">
                         <TextField fx:id="resWidthField" prefWidth="90" text="925"/>
@@ -55,8 +95,8 @@
                     </HBox>
                 </VBox>
 
-                <!-- 3. Bộ lọc danh sách phiên bản -->
-                <VBox spacing="6">
+                <!-- 4. Bộ lọc danh sách phiên bản -->
+                <VBox spacing="6" styleClass="settings-card">
                     <Label text="Danh sách phiên bản (Version list):" styleClass="status-label"/>
                     <HBox spacing="18">
                         <CheckBox fx:id="showSnapshotsCheckBox" text="Hiện Snapshots"/>
@@ -69,8 +109,8 @@
                     </HBox>
                 </VBox>
 
-                <!-- 4. LỆNH JAVA KHI CHẠY (JAVA & MINECRAFT ARGUMENTS) -->
-                <VBox spacing="6">
+                <!-- 5. LỆNH JAVA KHI CHẠY (JAVA & MINECRAFT ARGUMENTS) -->
+                <VBox spacing="6" styleClass="settings-card">
                     <Label text="Java Arguments (Lệnh Java khi chạy - JVM Flags):" styleClass="status-label"/>
                     <TextField fx:id="customJvmArgsField"
                                promptText="JVM arguments (vd: -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200)"/>
@@ -79,17 +119,17 @@
                                promptText="Minecraft arguments (vd: --server 127.0.0.1)"/>
                 </VBox>
 
-                <!-- 5. Đường dẫn Java -->
-                <VBox spacing="4">
+                <!-- 6. Đường dẫn Java -->
+                <VBox spacing="6" styleClass="settings-card">
                     <Label text="Đường dẫn Java tùy chỉnh (Java path - để trống = tự động tải):" styleClass="status-label"/>
                     <HBox spacing="8">
                         <TextField fx:id="javaPathField" promptText="vd: C:\Program Files\Java\jdk-21\bin\javaw.exe" HBox.hgrow="ALWAYS"/>
-                        <Button text="📁 Browse..." onAction="#onBrowseJavaPathClicked" styleClass="secondary-button"/>
+                        <Button text="Browse..." onAction="#onBrowseJavaPathClicked" styleClass="secondary-button"/>
                     </HBox>
                 </VBox>
 
-                <!-- 6. Phân bổ RAM (Thanh kéo + Ô nhập RAM tối đa & tối thiểu) -->
-                <VBox spacing="6">
+                <!-- 7. Phân bổ RAM (Thanh kéo + Ô nhập RAM tối đa & tối thiểu) -->
+                <VBox spacing="6" styleClass="settings-card">
                     <Label text="Phân bổ bộ nhớ RAM (Memory allocation - MB):" styleClass="status-label"/>
                     <HBox spacing="10" alignment="CENTER_LEFT">
                         <Slider fx:id="maxMemorySlider" min="512" max="16384" value="4096"
@@ -104,15 +144,14 @@
                     </HBox>
                 </VBox>
 
-                <!-- 7. Chế độ đồ họa, Giao diện, RAM Launcher, Ngôn ngữ & Console -->
-                <VBox spacing="6">
+                <!-- 8. Chế độ đồ họa, Hành vi, RAM Launcher, Ngôn ngữ & Console -->
+                <VBox spacing="8" styleClass="settings-card">
                     <Label text="Chế độ chơi (chỉnh đồ họa vanilla trong options.txt):" styleClass="status-label"/>
                     <HBox spacing="16">
                         <RadioButton fx:id="ultrafastRadio" text="Ultrafast"/>
                         <RadioButton fx:id="normalRadio" text="Normal"/>
                         <RadioButton fx:id="highQualityRadio" text="High Quality"/>
                     </HBox>
-                    <CheckBox fx:id="darkThemeCheckBox" text="Giao diện tối (dark theme)"/>
                     <Label text="Hành vi Launcher khi mở game:" styleClass="status-label"/>
                     <HBox spacing="16">
                         <RadioButton fx:id="hideLauncherRadio" text="Ẩn Launcher khi mở game" selected="true"/>
@@ -125,7 +164,7 @@
                     </HBox>
                     <HBox spacing="10" alignment="CENTER_LEFT">
                         <Label text="Ngôn ngữ (Language):" styleClass="status-label"/>
-                        <ComboBox fx:id="languageComboBox" prefWidth="180"/>
+                        <ComboBox fx:id="languageComboBox" prefWidth="200"/>
                     </HBox>
                     <HBox spacing="12" alignment="CENTER_LEFT">
                         <CheckBox fx:id="showConsoleOnErrorCheckBox" text="Tự hiện Console khi Launcher hoặc game bị lỗi" selected="true"/>

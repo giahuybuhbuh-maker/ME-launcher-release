@@ -16,7 +16,15 @@ import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.image.Image;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundImage;
+import javafx.scene.layout.BackgroundPosition;
+import javafx.scene.layout.BackgroundRepeat;
+import javafx.scene.layout.BackgroundSize;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
@@ -24,6 +32,10 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import model.LauncherConfig;
 
+import javax.imageio.ImageIO;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -33,6 +45,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SettingsController {
+
+    private static final Path SAVED_BG_FILE = Utils.getAppDataDir().resolve("config").resolve("custom_background.png");
 
     @FXML private VBox settingsContainer;
     @FXML private Spinner<Integer> minMemorySpinner;
@@ -62,6 +76,16 @@ public class SettingsController {
     @FXML private TextField customGameArgsField;
     @FXML private ComboBox<String> languageComboBox;
     @FXML private CheckBox showConsoleOnErrorCheckBox;
+
+    // --- CÁC THÀNH PHẦN MỚI: BỐ CỤC GIAO DIỆN & HÌNH NỀN ---
+    @FXML private RadioButton classicLayoutRadio;
+    @FXML private RadioButton modernLayoutRadio;
+    @FXML private TextField customBackgroundField;
+    @FXML private Slider backgroundOverlaySlider;
+    @FXML private Label backgroundOverlayValueLabel;
+    @FXML private StackPane backgroundPreviewPane;
+    @FXML private Region backgroundPreviewOverlay;
+    @FXML private Label backgroundPreviewLabel;
 
     @FXML
     public void initialize() {
@@ -143,16 +167,134 @@ public class SettingsController {
             }
         }
 
+        // Bố cục giao diện Classic / Modern
+        if (classicLayoutRadio != null && modernLayoutRadio != null) {
+            ToggleGroup layoutGroup = new ToggleGroup();
+            classicLayoutRadio.setToggleGroup(layoutGroup);
+            modernLayoutRadio.setToggleGroup(layoutGroup);
+            if (config.isModernLayout()) {
+                modernLayoutRadio.setSelected(true);
+            } else {
+                classicLayoutRadio.setSelected(true);
+            }
+        }
+
+        // Hình nền & độ tối lớp phủ
+        if (customBackgroundField != null) {
+            customBackgroundField.setText(config.getCustomBackgroundPath());
+        }
+        if (backgroundOverlaySlider != null) {
+            backgroundOverlaySlider.setValue(config.getBackgroundOverlayOpacity());
+            updateOverlayLabel(config.getBackgroundOverlayOpacity());
+            backgroundOverlaySlider.valueProperty().addListener((obs, oldVal, newVal) -> {
+                int pct = (int) Math.round(newVal.doubleValue());
+                updateOverlayLabel(pct);
+                updateBackgroundPreviewOverlayOnly(pct);
+            });
+        }
+        updateBackgroundPreview();
+
+        // 7 ngôn ngữ: Việt, Anh, Nga, Trung, Hàn, Ấn Độ, Nhật Bản
         if (languageComboBox != null) {
-            languageComboBox.getItems().setAll("Tiếng Việt", "English");
+            languageComboBox.getItems().setAll(LanguageManager.getDisplayNames());
             languageComboBox.getSelectionModel().select(
-                    "en".equalsIgnoreCase(config.getLanguage()) ? "English" : "Tiếng Việt");
+                    LanguageManager.displayNameForCode(config.getLanguage()));
         }
         if (showConsoleOnErrorCheckBox != null) {
             showConsoleOnErrorCheckBox.setSelected(config.isShowConsoleOnError());
         }
 
         Platform.runLater(this::enhanceReadability);
+    }
+
+    private void updateOverlayLabel(int percent) {
+        if (backgroundOverlayValueLabel != null) {
+            backgroundOverlayValueLabel.setText(percent + "%");
+        }
+    }
+
+    private void updateBackgroundPreviewOverlayOnly(int percent) {
+        if (backgroundPreviewOverlay == null) return;
+        double alpha = Math.max(0.0, Math.min(0.85, percent / 100.0));
+        backgroundPreviewOverlay.setStyle(
+                String.format(java.util.Locale.US, "-fx-background-color: rgba(10, 14, 22, %.2f);", alpha));
+    }
+
+    private void updateBackgroundPreview() {
+        if (backgroundPreviewPane == null) return;
+        String bgPath = customBackgroundField != null ? customBackgroundField.getText().trim() : "";
+        Image previewImage = null;
+
+        try {
+            if (!bgPath.isEmpty() && Files.isRegularFile(Path.of(bgPath))) {
+                try (var is = Files.newInputStream(Path.of(bgPath))) {
+                    previewImage = new Image(is, 240, 140, true, true);
+                }
+            } else {
+                for (String resPath : List.of("/assets/background.png", "/assets/background.jpg")) {
+                    try (var is = getClass().getResourceAsStream(resPath)) {
+                        if (is != null) {
+                            previewImage = new Image(is, 240, 140, true, true);
+                            break;
+                        }
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
+
+        if (previewImage != null && !previewImage.isError() && previewImage.getWidth() > 0) {
+            BackgroundSize bgSize = new BackgroundSize(1.0, 1.0, true, true, false, true);
+            backgroundPreviewPane.setBackground(new Background(new BackgroundImage(
+                    previewImage, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT,
+                    BackgroundPosition.CENTER, bgSize)));
+        } else {
+            backgroundPreviewPane.setBackground(null);
+        }
+
+        int pct = backgroundOverlaySlider != null ? (int) Math.round(backgroundOverlaySlider.getValue()) : 45;
+        updateBackgroundPreviewOverlayOnly(pct);
+    }
+
+    private String prepareSavedBackgroundCopy(String rawPath) {
+        if (rawPath == null || rawPath.isBlank()) return "";
+        try {
+            Path srcPath = Path.of(rawPath).toAbsolutePath().normalize();
+            if (!Files.isRegularFile(srcPath)) return "";
+
+            Path savedNorm = SAVED_BG_FILE.toAbsolutePath().normalize();
+            if (srcPath.equals(savedNorm)) {
+                return savedNorm.toString();
+            }
+
+            BufferedImage srcImg = ImageIO.read(srcPath.toFile());
+            if (srcImg == null) return srcPath.toString();
+
+            int maxW = 1280;
+            int maxH = 720;
+            int srcW = srcImg.getWidth();
+            int srcH = srcImg.getHeight();
+            double scale = Math.min(1.0, Math.min((double) maxW / srcW, (double) maxH / srcH));
+            int dstW = Math.max(1, (int) Math.round(srcW * scale));
+            int dstH = Math.max(1, (int) Math.round(srcH * scale));
+
+            BufferedImage resized = new BufferedImage(dstW, dstH, BufferedImage.TYPE_INT_RGB);
+            Graphics2D g2 = resized.createGraphics();
+            g2.setColor(java.awt.Color.BLACK);
+            g2.fillRect(0, 0, dstW, dstH);
+            g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+            g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.drawImage(srcImg, 0, 0, dstW, dstH, null);
+            g2.dispose();
+
+            Files.createDirectories(savedNorm.getParent());
+            ImageIO.write(resized, "png", savedNorm.toFile());
+            LauncherLogger.info("Da luu ban sao hinh nen (" + dstW + "x" + dstH + ") tai: " + savedNorm);
+            return savedNorm.toString();
+        } catch (Exception e) {
+            LauncherLogger.warn("Khong nen duoc ban sao hinh nen, dung truc tiep file goc: " + e.getMessage());
+            return rawPath;
+        }
     }
 
     /**
@@ -202,8 +344,8 @@ public class SettingsController {
 
         if (scene.getWindow() instanceof Stage stage) {
             LauncherApplication.loadWindowIcons(stage);
-            stage.setWidth(Math.max(stage.getWidth(), 640));
-            stage.setHeight(Math.max(stage.getHeight(), 650));
+            stage.setWidth(Math.max(stage.getWidth(), 680));
+            stage.setHeight(Math.max(stage.getHeight(), 660));
         }
         Parent root = scene.getRoot();
         if (root == null) return;
@@ -222,6 +364,8 @@ public class SettingsController {
     }
 
     private void applyStyleRecursively(Node node, String textStyle) {
+        if (node == backgroundPreviewPane || node == backgroundPreviewOverlay) return;
+
         if (node instanceof Label || node instanceof CheckBox || node instanceof RadioButton) {
             String existing = node.getStyle() == null ? "" : node.getStyle();
             node.setStyle(existing + ";" + textStyle + "; -fx-background-radius: 0px; -fx-border-radius: 0px;");
@@ -237,6 +381,33 @@ public class SettingsController {
                 }
             }
         }
+    }
+
+    @FXML
+    private void onBrowseBackgroundClicked() {
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Chọn hình nền cho ME Launcher (.png, .jpg)");
+        chooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("Image Files (*.png, *.jpg, *.jpeg)", "*.png", "*.jpg", "*.jpeg"));
+
+        File selected = chooser.showOpenDialog(infoLabel.getScene().getWindow());
+        if (selected != null && customBackgroundField != null) {
+            customBackgroundField.setText(selected.getAbsolutePath());
+            updateBackgroundPreview();
+            infoLabel.setText("Đã chọn ảnh nền mới (sẽ tự nén nhẹ khi bấm Lưu để tiết kiệm RAM).");
+        }
+    }
+
+    @FXML
+    private void onResetBackgroundClicked() {
+        if (customBackgroundField != null) {
+            customBackgroundField.setText("");
+        }
+        if (backgroundOverlaySlider != null) {
+            backgroundOverlaySlider.setValue(45);
+        }
+        updateBackgroundPreview();
+        infoLabel.setText("Đã đặt lại hình nền mặc định (nhấn Lưu để áp dụng).");
     }
 
     @FXML
@@ -287,6 +458,10 @@ public class SettingsController {
         ultrafastRadio.setSelected(true);
         if (hideLauncherRadio != null) hideLauncherRadio.setSelected(true);
         if (lowRamRadio != null) lowRamRadio.setSelected(true);
+        if (classicLayoutRadio != null) classicLayoutRadio.setSelected(true);
+        if (customBackgroundField != null) customBackgroundField.setText("");
+        if (backgroundOverlaySlider != null) backgroundOverlaySlider.setValue(45);
+        updateBackgroundPreview();
 
         if (resWidthField != null) resWidthField.setText("925");
         if (resHeightField != null) resHeightField.setText("530");
@@ -357,6 +532,19 @@ public class SettingsController {
             config.setLauncherRamMode(highRamRadio.isSelected() ? "high" : "low");
         }
 
+        if (classicLayoutRadio != null && modernLayoutRadio != null) {
+            config.setUiLayout(modernLayoutRadio.isSelected() ? "modern" : "classic");
+        }
+
+        if (customBackgroundField != null) {
+            String rawBg = customBackgroundField.getText() == null ? "" : customBackgroundField.getText().trim();
+            config.setCustomBackgroundPath(prepareSavedBackgroundCopy(rawBg));
+        }
+
+        if (backgroundOverlaySlider != null) {
+            config.setBackgroundOverlayOpacity((int) Math.round(backgroundOverlaySlider.getValue()));
+        }
+
         if (customJvmArgsField != null) config.setCustomJvmArgs(customJvmArgsField.getText().trim());
         if (customGameArgsField != null) config.setCustomGameArgs(customGameArgsField.getText().trim());
 
@@ -365,7 +553,7 @@ public class SettingsController {
         else config.setPerformanceMode("normal");
 
         if (languageComboBox != null) {
-            config.setLanguage("English".equals(languageComboBox.getValue()) ? "en" : "vi");
+            config.setLanguage(LanguageManager.codeFromDisplayName(languageComboBox.getValue()));
         }
         if (showConsoleOnErrorCheckBox != null) {
             config.setShowConsoleOnError(showConsoleOnErrorCheckBox.isSelected());
@@ -383,6 +571,9 @@ public class SettingsController {
                 + ", fullscreen=" + config.isFullscreen()
                 + ", hideLauncherOnPlay=" + config.isHideLauncherOnPlay()
                 + ", launcherRamMode=" + config.getLauncherRamMode()
+                + ", uiLayout=" + config.getUiLayout()
+                + ", background=" + (config.getCustomBackgroundPath().isBlank() ? "(mac dinh)" : config.getCustomBackgroundPath())
+                + ", overlay=" + config.getBackgroundOverlayOpacity() + "%"
                 + ", language=" + config.getLanguage()
                 + ", showConsoleOnError=" + config.isShowConsoleOnError());
         closeWindow();
@@ -509,6 +700,9 @@ public class SettingsController {
     }
 
     private void closeWindow() {
-        ((Stage) infoLabel.getScene().getWindow()).close();
+        if (infoLabel != null && infoLabel.getScene() != null
+                && infoLabel.getScene().getWindow() instanceof Stage stage) {
+            stage.close();
+        }
     }
 }

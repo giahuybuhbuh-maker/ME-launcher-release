@@ -39,6 +39,11 @@ public class LauncherConfig {
     private String customJvmArgs = DEFAULT_JVM_ARGS;
     private String customGameArgs = "";
 
+    // --- TÙY CHỈNH GIAO DIỆN & HÌNH NỀN ---
+    private String uiLayout = "classic"; // "classic" (Sidebar + Thanh day) hoac "modern" (Icon rail + Play giua)
+    private String customBackgroundPath = ""; // duong dan anh nen tuy chinh (trong = mac dinh)
+    private int backgroundOverlayOpacity = 45; // do toi lop phu nen (0 - 80%)
+
     public int getMinMemoryMB() { return minMemoryMB; }
     public void setMinMemoryMB(int minMemoryMB) { this.minMemoryMB = minMemoryMB; }
 
@@ -115,5 +120,31 @@ public class LauncherConfig {
     }
     public boolean isLowRamMode() {
         return !"high".equalsIgnoreCase(launcherRamMode);
+    }
+
+    public String getUiLayout() {
+        return "modern".equalsIgnoreCase(uiLayout) ? "modern" : "classic";
+    }
+    public void setUiLayout(String uiLayout) {
+        this.uiLayout = "modern".equalsIgnoreCase(uiLayout) ? "modern" : "classic";
+    }
+    public boolean isModernLayout() {
+        return "modern".equalsIgnoreCase(uiLayout);
+    }
+
+    public String getCustomBackgroundPath() {
+        return customBackgroundPath == null ? "" : customBackgroundPath;
+    }
+    public void setCustomBackgroundPath(String customBackgroundPath) {
+        this.customBackgroundPath = customBackgroundPath == null ? "" : customBackgroundPath;
+    }
+
+    public int getBackgroundOverlayOpacity() {
+        if (backgroundOverlayOpacity < 0) return 0;
+        if (backgroundOverlayOpacity > 80) return 80;
+        return backgroundOverlayOpacity;
+    }
+    public void setBackgroundOverlayOpacity(int backgroundOverlayOpacity) {
+        this.backgroundOverlayOpacity = Math.max(0, Math.min(80, backgroundOverlayOpacity));
     }
 }

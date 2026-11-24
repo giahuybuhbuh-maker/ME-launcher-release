@@ -18,6 +18,7 @@ import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
@@ -27,10 +28,18 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundImage;
+import javafx.scene.layout.BackgroundPosition;
+import javafx.scene.layout.BackgroundRepeat;
+import javafx.scene.layout.BackgroundSize;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.SVGPath;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -47,6 +56,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 public class LauncherController {
@@ -90,6 +100,23 @@ public class LauncherController {
     @FXML
     private Label statusLabel;
 
+    // --- CÁC THÀNH PHẦN GIAO DIỆN MỚI (CLASSIC / MODERN & BACKGROUND) ---
+    @FXML private StackPane rootStackPane;
+    @FXML private Region backgroundLayer;
+    @FXML private Region backgroundOverlay;
+    @FXML private VBox sidebarPane;
+    @FXML private HBox sidebarBrandBox;
+    @FXML private Label brandTitleLabel;
+    @FXML private Label topBrandLabel;
+    @FXML private VBox modernLaunchSlot;
+    @FXML private HBox classicLaunchSlot;
+    @FXML private HBox versionToolsBox;
+    @FXML private Button navPlayButton;
+    @FXML private Button navModsButton;
+    @FXML private Button navGameDirButton;
+    @FXML private Button navConsoleButton;
+    @FXML private Button refreshVersionsButton;
+
     @FXML
     public void initialize() {
         LauncherLogger.info("Khoi tao giao dien launcher...");
@@ -104,6 +131,9 @@ public class LauncherController {
         ConfigManager.get();
         ConfigManager.save();
 
+        // Gan icon vector SVG sac net cho Sidebar va nut lam moi (khong dung emoji mau de tranh loi macOS)
+        setupVectorIcons();
+
         // Tu dong nap lai ten nhan vat Crack (Offline) da luu tu lan truoc (Bug #1)
         loadSavedOfflineProfile();
 
@@ -117,7 +147,221 @@ public class LauncherController {
             }
         });
 
+        Platform.runLater(() -> applyAppearance(ConfigManager.get()));
         loadVersionsAsync(false);
+    }
+
+    /**
+     * Gan bieu tuong vector SVG cho cac nut dieu huong va nut lam moi.
+     */
+    private void setupVectorIcons() {
+        setSvgIcon(navPlayButton, "M8 5v14l11-7z", "#7ed957", 0.72);
+        setSvgIcon(navModsButton, "M12 2L3 7v10l9 5 9-5V7l-9-5zm0 2.2L18.6 8 12 11.8 5.4 8 12 4.2zM5 9.8l6 3.5v6.4l-6-3.3V9.8zm14 6.6l-6 3.3v-6.4l6-3.5v6.6z", "#e2e8f0", 0.68);
+        setSvgIcon(navGameDirButton, "M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z", "#e2e8f0", 0.68);
+        setSvgIcon(navConsoleButton, "M4 5h16v14H4V5zm2 3v2l3 2-3 2v2l5-4-5-4zm6 6v2h6v-2h-6z", "#e2e8f0", 0.68);
+        setSvgIcon(settingsButton, "M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.1 7.1 0 0 0-1.63-.94l-.36-2.54A.49.49 0 0 0 13.9 2h-3.8a.49.49 0 0 0-.49.42l-.36 2.54c-.58.23-1.12.55-1.63.94l-2.39-.96a.5.5 0 0 0-.61.22L2.7 8.48a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94L2.82 14.52a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .61.22l2.39-.96c.5.39 1.05.71 1.63.94l.36 2.54c.05.24.25.42.49.42h3.8c.24 0 .44-.18.49-.42l.36-2.54c.58-.23 1.12-.55 1.63-.94l2.39.96a.5.5 0 0 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z", "#e2e8f0", 0.68);
+        setSvgIcon(refreshVersionsButton, "M17.65 6.35A7.96 7.96 0 0 0 12 4a8 8 0 1 0 7.73 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z", "#e2e8f0", 0.68);
+    }
+
+    private void setSvgIcon(Button button, String pathData, String colorHex, double scale) {
+        if (button == null) return;
+        SVGPath svg = new SVGPath();
+        svg.setContent(pathData);
+        svg.setFill(Color.web(colorHex));
+        svg.setScaleX(scale);
+        svg.setScaleY(scale);
+        StackPane holder = new StackPane(svg);
+        holder.setMinSize(18, 18);
+        holder.setPrefSize(18, 18);
+        holder.setMaxSize(18, 18);
+        button.setGraphic(holder);
+    }
+
+    /**
+     * Ap dung Bo cuc (Classic / Modern), Hinh nen tuy chinh, Lop phu, Chu de va Ngon ngu.
+     */
+    private void applyAppearance(LauncherConfig config) {
+        if (config == null) return;
+        Scene scene = playButton != null ? playButton.getScene() : null;
+
+        if (scene != null) {
+            LauncherApplication.applyLauncherRamMode(scene, config);
+
+            String darkCssUrl = getClass().getResource("/css/dark.css") != null
+                    ? getClass().getResource("/css/dark.css").toExternalForm() : null;
+            if (darkCssUrl != null) {
+                if (config.isDarkTheme()) {
+                    if (!scene.getStylesheets().contains(darkCssUrl)) {
+                        scene.getStylesheets().add(darkCssUrl);
+                    }
+                } else {
+                    scene.getStylesheets().remove(darkCssUrl);
+                }
+            }
+        }
+
+        // 1. Luôn nạp hình nền (cả ảnh mặc định lẫn ảnh tùy chỉnh ở cả Low RAM và High RAM)
+        applyBackgroundImage(config);
+
+        // 2. Áp dụng lớp phủ tối chuyển sắc
+        if (backgroundOverlay != null) {
+            double bottomAlpha = Math.max(0.0, Math.min(0.85, config.getBackgroundOverlayOpacity() / 100.0));
+            double topAlpha = Math.max(0.0, bottomAlpha * 0.55);
+            backgroundOverlay.setStyle(String.format(Locale.US,
+                    "-fx-background-color: linear-gradient(to bottom, rgba(10, 14, 22, %.2f), rgba(10, 14, 22, %.2f));",
+                    topAlpha, bottomAlpha));
+        }
+
+        // 3. Áp dụng bố cục Classic hoặc Modern
+        applyUiLayout(config.isModernLayout());
+
+        // 4. Áp dụng ngôn ngữ & Tooltip sidebar
+        if (scene != null) {
+            LanguageManager.applyToScene(scene);
+        }
+        updateSidebarTooltips(config.isModernLayout());
+    }
+
+    private void applyBackgroundImage(LauncherConfig config) {
+        String customPath = config.getCustomBackgroundPath();
+        int decodeW = config.isLowRamMode() ? 1024 : 1280;
+        int decodeH = config.isLowRamMode() ? 600 : 720;
+        Image bgImg = null;
+
+        try {
+            // Ưu tiên 1: Ảnh tùy chỉnh người dùng đã chọn trong Cài đặt
+            if (customPath != null && !customPath.isBlank()) {
+                Path p = Path.of(customPath);
+                if (Files.isRegularFile(p)) {
+                    try (var is = Files.newInputStream(p)) {
+                        bgImg = new Image(is, decodeW, decodeH, true, true);
+                    }
+                }
+            }
+
+            // Ưu tiên 2: Ảnh nền mặc định trong resources (/assets/background.png hoặc .jpg)
+            if (bgImg == null || bgImg.isError() || bgImg.getWidth() <= 0) {
+                for (String resPath : List.of("/assets/background.png", "/assets/background.jpg", "assets/background.png")) {
+                    try (var is = getClass().getResourceAsStream(resPath)) {
+                        if (is != null) {
+                            Image candidate = new Image(is, decodeW, decodeH, true, true);
+                            if (!candidate.isError() && candidate.getWidth() > 0) {
+                                bgImg = candidate;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LauncherLogger.warn("Khong nap duoc hinh nen: " + e.getMessage());
+        }
+
+        Background targetBg = null;
+        if (bgImg != null && !bgImg.isError() && bgImg.getWidth() > 0) {
+            BackgroundSize coverSize = new BackgroundSize(1.0, 1.0, true, true, false, true);
+            targetBg = new Background(new BackgroundImage(
+                    bgImg, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT,
+                    BackgroundPosition.CENTER, coverSize));
+            LauncherLogger.info("Da nap hinh nen thanh cong (" + (int) bgImg.getWidth() + "x" + (int) bgImg.getHeight() + ")");
+        } else {
+            LauncherLogger.warn("Khong tim thay file anh nen nao (kiem tra src/main/resources/assets/background.png).");
+        }
+
+        // Gán vào backgroundLayer (nếu dùng launcher.fxml mới) hoặc thẳng vào rootStackPane (nếu dùng FXML cũ)
+        if (backgroundLayer != null) {
+            backgroundLayer.setBackground(targetBg);
+        } else if (rootStackPane != null) {
+            rootStackPane.setBackground(targetBg);
+        }
+    }
+
+    private void applyUiLayout(boolean modern) {
+        if (rootStackPane == null || classicLaunchSlot == null || modernLaunchSlot == null
+                || versionToolsBox == null || playButton == null) {
+            return;
+        }
+
+        rootStackPane.getStyleClass().removeAll("layout-classic", "layout-modern");
+        rootStackPane.getStyleClass().add(modern ? "layout-modern" : "layout-classic");
+
+        // Go nut PLAY & cum chon phien ban khoi vi tri cu de gan sang vi tri moi
+        classicLaunchSlot.getChildren().removeAll(versionToolsBox, playButton);
+        modernLaunchSlot.getChildren().removeAll(versionToolsBox, playButton);
+
+        if (modern) {
+            // Bo cuc Modern: thanh icon doc manh ben trai + nut PLAY lon o trung tam
+            if (sidebarPane != null) sidebarPane.setPrefWidth(58);
+            if (sidebarBrandBox != null) sidebarBrandBox.setAlignment(Pos.CENTER);
+            if (brandTitleLabel != null) {
+                brandTitleLabel.setVisible(false);
+                brandTitleLabel.setManaged(false);
+            }
+            if (topBrandLabel != null) {
+                topBrandLabel.setVisible(true);
+                topBrandLabel.setManaged(true);
+            }
+            setSidebarDisplayMode(ContentDisplay.GRAPHIC_ONLY);
+
+            modernLaunchSlot.getChildren().addAll(playButton, versionToolsBox);
+            modernLaunchSlot.setVisible(true);
+            modernLaunchSlot.setManaged(true);
+            classicLaunchSlot.setVisible(false);
+            classicLaunchSlot.setManaged(false);
+        } else {
+            // Bo cuc Classic: Sidebar day du chu ben trai + thanh dieu khien day
+            if (sidebarPane != null) sidebarPane.setPrefWidth(196);
+            if (sidebarBrandBox != null) sidebarBrandBox.setAlignment(Pos.CENTER_LEFT);
+            if (brandTitleLabel != null) {
+                brandTitleLabel.setVisible(true);
+                brandTitleLabel.setManaged(true);
+            }
+            if (topBrandLabel != null) {
+                topBrandLabel.setVisible(false);
+                topBrandLabel.setManaged(false);
+            }
+            setSidebarDisplayMode(ContentDisplay.LEFT);
+
+            classicLaunchSlot.getChildren().addAll(versionToolsBox, playButton);
+            classicLaunchSlot.setVisible(true);
+            classicLaunchSlot.setManaged(true);
+            modernLaunchSlot.setVisible(false);
+            modernLaunchSlot.setManaged(false);
+        }
+    }
+
+    private void setSidebarDisplayMode(ContentDisplay mode) {
+        for (Button btn : List.of(navPlayButton, navModsButton, navGameDirButton, navConsoleButton, settingsButton)) {
+            if (btn != null) {
+                btn.setContentDisplay(mode);
+            }
+        }
+    }
+
+    private void updateSidebarTooltips(boolean modern) {
+        for (Button btn : List.of(navPlayButton, navModsButton, navGameDirButton, navConsoleButton, settingsButton)) {
+            if (btn != null) {
+                btn.setTooltip(modern ? new Tooltip(btn.getText()) : null);
+            }
+        }
+    }
+
+    @FXML
+    private void onNavPlayClicked() {
+        // Dam bao nut Trang chu luon focus ve man hinh chinh
+        if (playButton != null) {
+            playButton.requestFocus();
+        }
+    }
+
+    @FXML
+    private void onOpenGameDirClicked() {
+        Utils.openDirectory(FileManager.gameDir().toAbsolutePath().normalize());
+    }
+
+    @FXML
+    private void onOpenConsoleClicked() {
+        ConsoleWindow.show();
     }
 
     /**
@@ -134,6 +378,7 @@ public class LauncherController {
                     currentProfile = authManager.createOfflineProfile(savedUsername);
                     profileLabel.setText("Offline: " + currentProfile.getUsername());
                     loginButton.setText("Doi tai khoan");
+                    LanguageManager.applyToNode(loginButton);
                     LauncherLogger.info("Da tu dong khoi phuc tai khoan Offline: " + currentProfile.getUsername());
                 }
             }
@@ -267,7 +512,7 @@ public class LauncherController {
                     statusLabel.setText("Che do Offline (" + versions.size() + " phien ban da cai san)");
                 }
             } else {
-                statusLabel.setText("San sang");
+                statusLabel.setText(LanguageManager.translateText("San sang"));
             }
             LauncherLogger.info("Da nap " + versions.size() + " phien ban len giao dien.");
         });
@@ -635,7 +880,7 @@ public class LauncherController {
         step3Label.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #ffffff;");
 
         Label step3Hint = new Label(
-                "Sau khi cài Mod Loader xong, bấm nút làm mới (🔄) cạnh ô chọn phiên bản để phiên bản mới hiện ra."
+                "Sau khi cài Mod Loader xong, bấm nút làm mới cạnh ô chọn phiên bản để phiên bản mới hiện ra."
         );
         step3Hint.setWrapText(true);
         step3Hint.setStyle("-fx-font-size: 12px; -fx-text-fill: #b0b6bd;");
@@ -898,7 +1143,7 @@ public class LauncherController {
             Parent root = loader.load();
 
             Stage settingsStage = new Stage();
-            settingsStage.setTitle("Cai dat");
+            settingsStage.setTitle(LanguageManager.t("settings.title"));
             settingsStage.initOwner(settingsButton.getScene().getWindow());
             settingsStage.initModality(Modality.WINDOW_MODAL);
             settingsStage.setResizable(false);
@@ -911,12 +1156,9 @@ public class LauncherController {
 
             // [SỬA BUG #1] Đảm bảo lưu lại file config ngay sau khi đóng cửa sổ Cài đặt
             ConfigManager.save();
-            if (settingsButton.getScene() != null) {
-                LanguageManager.applyToScene(settingsButton.getScene());
-                LauncherApplication.applyLauncherRamMode(settingsButton.getScene(), ConfigManager.get());
-              if (ConfigManager.get().isLowRamMode()) {
-                  System.gc();
-              }
+            applyAppearance(ConfigManager.get());
+            if (ConfigManager.get().isLowRamMode()) {
+                System.gc();
             }
             // Tự động làm mới lại danh sách phiên bản theo các ô tích (Snapshots, Beta, Alpha, Bản cũ, Bản Mod)
             loadVersionsAsync(true);
@@ -969,6 +1211,7 @@ public class LauncherController {
 
             profileLabel.setText("Offline: " + currentProfile.getUsername());
             loginButton.setText("Doi tai khoan");
+            LanguageManager.applyToNode(loginButton);
             LauncherLogger.info("Da dang nhap Offline voi ten: " + currentProfile.getUsername()
                     + " (UUID: " + currentProfile.getUuid() + ")");
             return true;
@@ -999,6 +1242,7 @@ public class LauncherController {
             currentProfile = task.getValue();
             profileLabel.setText("Da dang nhap: " + currentProfile.getUsername());
             loginButton.setText("Doi tai khoan");
+            LanguageManager.applyToNode(loginButton);
             loginButton.setDisable(false);
             LauncherLogger.info("Dang nhap thanh cong: " + currentProfile.getUsername());
             loadSkinFace(currentProfile.getSkinUrl());

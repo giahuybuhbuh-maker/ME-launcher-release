@@ -1,35 +1,151 @@
 .root-pane {
     -fx-font-family: "Segoe UI", "Arial", sans-serif;
+    -fx-background-color: #151921;
+}
+
+.background-layer {
+    -fx-background-color: linear-gradient(to bottom right, #151921, #222938);
+}
+
+.background-overlay {
+    -fx-background-color: linear-gradient(to bottom, rgba(10, 14, 22, 0.30), rgba(10, 14, 22, 0.72));
+}
+
+.main-layout-pane {
+    -fx-background-color: transparent;
+}
+
+.sidebar-pane {
+    -fx-background-color: rgba(15, 19, 27, 0.86);
+    -fx-border-color: rgba(255, 255, 255, 0.08);
+    -fx-border-width: 0 1 0 0;
+}
+
+.sidebar-brand {
+    -fx-padding: 4 6 8 6;
 }
 
 .logo-label {
-    -fx-font-size: 20px;
+    -fx-font-size: 16px;
     -fx-font-weight: bold;
+    -fx-text-fill: #7ed957 !important;
+}
+
+.top-brand-label {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #7ed957 !important;
+}
+
+.version-badge {
+    -fx-background-color: rgba(126, 217, 87, 0.16);
+    -fx-border-color: rgba(126, 217, 87, 0.45);
+    -fx-border-width: 1;
+    -fx-padding: 2 8 2 8;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #9cf27a !important;
+}
+
+.top-bar {
+    -fx-background-color: rgba(12, 16, 23, 0.52);
+    -fx-border-color: rgba(255, 255, 255, 0.07);
+    -fx-border-width: 0 0 1 0;
+}
+
+.bottom-bar {
+    -fx-background-color: rgba(12, 16, 23, 0.78);
+    -fx-border-color: rgba(255, 255, 255, 0.08);
+    -fx-border-width: 1 0 0 0;
+}
+
+.account-pill {
+    -fx-background-color: rgba(255, 255, 255, 0.06);
+    -fx-border-color: rgba(255, 255, 255, 0.10);
+    -fx-border-width: 1;
+    -fx-padding: 4 8 4 8;
+}
+
+.nav-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #d1d5db;
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-alignment: CENTER_LEFT;
+    -fx-graphic-text-gap: 10;
+    -fx-padding: 9 12 9 12;
+    -fx-border-color: transparent;
+    -fx-border-width: 0 0 0 3;
+    -fx-cursor: hand;
+}
+
+.nav-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.08);
+    -fx-text-fill: #ffffff;
+}
+
+.nav-button-active {
+    -fx-background-color: rgba(76, 175, 80, 0.18);
+    -fx-border-color: #4caf50;
+    -fx-text-fill: #ffffff;
+}
+
+.layout-modern .nav-button {
+    -fx-alignment: CENTER;
+    -fx-padding: 10 0 10 0;
 }
 
 .welcome-label {
-    -fx-font-size: 26px;
+    -fx-font-size: 28px;
     -fx-font-weight: bold;
 }
 
 .subtitle-label {
     -fx-font-size: 14px;
+    -fx-text-fill: #d1d5db !important;
+}
+
+.modern-launch-slot {
+    -fx-padding: 12 18 14 18;
+    -fx-background-color: rgba(12, 16, 23, 0.58);
+    -fx-border-color: rgba(255, 255, 255, 0.12);
+    -fx-border-width: 1;
+}
+
+.version-tools-box {
+    -fx-background-color: rgba(255, 255, 255, 0.06);
+    -fx-border-color: rgba(255, 255, 255, 0.10);
+    -fx-border-width: 1;
+    -fx-padding: 4 8 4 8;
 }
 
 .play-button {
     -fx-font-size: 16px;
     -fx-font-weight: bold;
-    -fx-padding: 10 32 10 32;
+    -fx-padding: 10 34 10 34;
+    -fx-background-color: #4caf50;
+    -fx-text-fill: white;
+    -fx-border-color: #6ee072;
+    -fx-border-width: 1;
     -fx-background-radius: 0;
     -fx-border-radius: 0;
     -fx-cursor: hand;
+}
+
+.play-button:hover {
+    -fx-background-color: #5fc164;
+}
+
+.layout-modern .play-button {
+    -fx-font-size: 18px;
+    -fx-padding: 13 58 13 58;
 }
 
 .icon-button {
     -fx-font-size: 13px;
     -fx-background-radius: 0;
     -fx-border-radius: 0;
-    -fx-padding: 6 14 6 14;
+    -fx-padding: 6 12 6 12;
     -fx-cursor: hand;
 }
 
@@ -44,6 +160,26 @@
 .status-label {
     -fx-font-size: 12px;
 }
+
+.settings-card {
+    -fx-background-color: rgba(255, 255, 255, 0.04);
+    -fx-border-color: rgba(255, 255, 255, 0.10);
+    -fx-border-width: 1;
+    -fx-padding: 12;
+}
+
+.section-header-label {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #7ed957 !important;
+}
+
+.bg-preview-box {
+    -fx-background-color: #1b1f24;
+    -fx-border-color: #4caf50;
+    -fx-border-width: 1;
+}
+
 /* Làm rõ toàn bộ chữ nhãn, CheckBox và RadioButton trong Cài đặt */
 .label, .check-box, .radio-button {
     -fx-text-fill: #FFFFFF !important;
